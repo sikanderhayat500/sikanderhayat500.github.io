@@ -82,7 +82,24 @@
   <div id="khataList" style="margin-top:15px;text-align:left;"></div>
   <h3 style="color:#00ff88;">Total: Rs <span id="total">0</span></h3>
 </div>
+<button onclick="shareKhata()" style="width:95%;padding:10px;margin:5px;background:#25D366;color:#fff;font-weight:bold;border:none;border-radius:5px;">📤 WhatsApp Pe Share Karo</button>
 
+<script>
+function shareKhata() {
+  if(khatey.length === 0) {
+    alert('Pehle khata add karo');
+    return;
+  }
+  let text = `*SIKANDER HAYAT - KHATA LIST*%0A%0A`;
+  let total = 0;
+  khatey.forEach(k => {
+    text += `${k.naam}: Rs ${k.raqam}%0A`;
+    total += Number(k.raqam);
+  });
+  text += `%0A*Total: Rs ${total}*%0A%0AContact: 0314-5587856`;
+  window.open(`https://wa.me/?text=${text}`, '_blank');
+}
+</script>
 <script>
 let khatey = JSON.parse(localStorage.getItem('khatey')) || [];
 
