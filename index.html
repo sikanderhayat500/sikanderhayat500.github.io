@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tally Tracker Graph - Sikander Hayat</title>
+<title>Tally Tracker Auto Pilot - Sikander Hayat</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -14,6 +14,8 @@ button{width:95%;padding:10px;margin:8px 0;background:#00ff88;color:#000;border:
 .search{background:#001a0d;border:2px solid #0f0}
 .paid{background:#0f02;border-left:3px solid #0f0}
 .unpaid{background:#f002;border-left:3px solid #f00}
+.overdue{background:#f40!important;border:3px solid #f00!important;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
 .tag{position:absolute;top:5px;right:5px;font-size:10px;padding:2px 6px;border-radius:3px}
 .lock{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999;display:flex;justify-content:center;align-items:center}
 .chartbox{background:#111;padding:10px;border-radius:10px;margin:10px 0}
@@ -31,12 +33,13 @@ button{width:95%;padding:10px;margin:8px 0;background:#00ff88;color:#000;border:
 </div>
 
 <div class="card">
-  <h1 style="color:#00ff88">⚡ TALLY GRAPH PRO ⚡</h1>
+  <h1 style="color:#00ff88">⚡ TALLY AUTO PILOT ⚡</h1>
   <h2>SIKANDER HAYAT</h2>
   <p id="time" style="color:#0ff"></p>
   <p style="color:#0f0">Battery: <span id="bat">--</span>%</p>
+  <p style="color:#0ff;font-size:11px">Last Backup: <span id="lastBackup">Never</span></p>
   <button onclick="lockApp()" style="background:#f00;color:#fff;padding:5px">🔒 LOCK</button>
-  <button onclick="showGraph()" style="background:#f0f;color:#fff;padding:5px">📊 GRAPH DEKHO</button>
+  <button onclick="showGraph()" style="background:#f0f;color:#fff;padding:5px">📊 GRAPH</button>
 
   <input id="search" class="search" placeholder="🔍 Naam se search karo..." oninput="searchKhata()">
 
@@ -44,11 +47,13 @@ button{width:95%;padding:10px;margin:8px 0;background:#00ff88;color:#000;border:
     <button onclick="filterType('all')" style="background:#555">SAB</button>
     <button onclick="filterType('paid')" style="background:#0a0">PAID</button>
     <button onclick="filterType('unpaid')" style="background:#a00">UNPAID</button>
+    <button onclick="filterType('overdue')" style="background:#f40">OVERDUE</button>
   </div>
 
   <input id="n" placeholder="Client Ka Naam">
   <input id="r" type="number" placeholder="Raqam">
   <input id="m" type="number" placeholder="Mobile: 0314xxxxxxx">
+  <input id="due" type="date" placeholder="Due Date">
   <button onclick="add()">+ ADD KHATA</button>
 
   <div id="list" style="margin-top:15px"></div>
@@ -69,6 +74,7 @@ button{width:95%;padding:10px;margin:8px 0;background:#00ff88;color:#000;border:
   <button onclick="bulkSMS()" style="background:#ff0;color:#000">📲 SAB UNPAID KO SMS</button>
   <button onclick="share()" style="background:#25D366;color:#fff">📲 WhatsApp Share</button>
   <button onclick="downloadPDF()" style="background:#f40;color:#fff">📄 PDF Download</button>
+  <button onclick="manualBackup()" style="background:#08f;color:#fff">💾 MANUAL BACKUP</button>
   <p style="color:#555;margin-top:20px;font-size:12px">Made in Risalpur Cantt | Pakistan</p>
 </div>
 
@@ -82,24 +88,33 @@ let pieChart,barChart;
 if(localStorage.getItem('locked')!=='false')document.getElementById('lockScreen').style.display='flex';
 else document.getElementById('lockScreen').style.display='none';
 
+// AUTO BACKUP HAR 24 GHANTE
+setInterval(()=>{autoBackup()},86400000);
+document.getElementById('lastBackup').innerText=localStorage.getItem('lastBackup')||'Never';
+
+function autoBackup(){let data=JSON.stringify(k);localStorage.setItem('autoBackup',data);localStorage.setItem('lastBackup',new Date().toLocaleString('en-GB'));document.getElementById('lastBackup').innerText=localStorage.getItem('lastBackup')}
+function manualBackup(){autoBackup();navigator.clipboard.writeText(JSON.stringify(k));alert('Backup copy ho gaya + Auto save bhi ho gaya!')}
+
 function unlock(){if(document.getElementById('pass').value===pass){document.getElementById('lockScreen').style.display='none';localStorage.setItem('locked','false')}else alert('Ghalat Password!')}
 function lockApp(){document.getElementById('lockScreen').style.display='flex';localStorage.setItem('locked','true');document.getElementById('pass').value=''}
 
 setInterval(()=>{document.getElementById('time').innerText=new Date().toLocaleString('en-GB',{dateStyle:'full',timeStyle:'medium'})},1000);
 navigator.getBattery().then(b=>{let u=()=>document.getElementById('bat').innerText=Math.round(b.level*100);u();b.addEventListener('levelchange',u)});
 
-function show(list=filterK){let l=document.getElementById('list'),t=0,tp=0;l.innerHTML='';list.forEach((x)=>{let i=k.indexOf(x);let status=x.p?'paid':'unpaid';l.innerHTML+=`<div class="item ${status}"><span class="tag" style="background:${x.p?'#0a0':'#a00'}">${x.p?'PAID':'UNPAID'}</span><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">📱 ${x.m||'No Number'} | Date: ${x.d}</small><br><button onclick="togglePaid(${i})" style="background:${x.p?'orange':'green'};color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">${x.p?'UNPAID':'PAID'}</button>${x.m?`<button onclick="sendSMS(${i})" style="background:#0ff;color:#000;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">📲 SMS</button>`:''}<button onclick="edit(${i})" style="background:orange;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">EDIT</button><button onclick="del(${i})" style="background:red;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 0 0 0">X</button></div>`;t+=Number(x.r);if(x.p)tp+=Number(x.r)});document.getElementById('t').innerText=t;document.getElementById('tp').innerText=tp;document.getElementById('tb').innerText=t-tp}
+function isOverdue(dueDate){if(!dueDate)return false;return new Date(dueDate)<new Date().setHours(0,0,0,0)}
 
-function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,m=document.getElementById('m').value,d=new Date().toLocaleDateString('en-GB');if(n&&r){k.push({n,r,m,d,p:false});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';document.getElementById('m').value='';document.getElementById('search').value='';filterType(currentFilter)}else alert('Naam aur Raqam zaroori hai')}
+function show(list=filterK){let l=document.getElementById('list'),t=0,tp=0;l.innerHTML='';list.forEach((x)=>{let i=k.indexOf(x);let status=x.p?'paid':'unpaid';let overdue=!x.p&&isOverdue(x.due);if(overdue)status+=' overdue';l.innerHTML+=`<div class="item ${status}"><span class="tag" style="background:${x.p?'#0a0':overdue?'#f40':'#a00'}">${x.p?'PAID':overdue?'OVERDUE':'UNPAID'}</span><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">📱 ${x.m||'No Num'} | Date: ${x.d}${x.due?` | Due: ${x.due}`:''}</small><br><button onclick="togglePaid(${i})" style="background:${x.p?'orange':'green'};color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">${x.p?'UNPAID':'PAID'}</button>${x.m?`<button onclick="sendSMS(${i})" style="background:#0ff;color:#000;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">📲 SMS</button>`:''}<button onclick="edit(${i})" style="background:orange;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">EDIT</button><button onclick="del(${i})" style="background:red;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 0 0 0">X</button></div>`;t+=Number(x.r);if(x.p)tp+=Number(x.r)});document.getElementById('t').innerText=t;document.getElementById('tp').innerText=tp;document.getElementById('tb').innerText=t-tp}
+
+function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,m=document.getElementById('m').value,due=document.getElementById('due').value,d=new Date().toLocaleDateString('en-GB');if(n&&r){k.push({n,r,m,d,due,p:false});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';document.getElementById('m').value='';document.getElementById('due').value='';document.getElementById('search').value='';filterType(currentFilter)}else alert('Naam aur Raqam zaroori hai')}
 function del(i){k.splice(i,1);localStorage.setItem('k',JSON.stringify(k));filterType(currentFilter)}
-function edit(i){let n=prompt("Naya naam:",k[i].n),r=prompt("Nayi raqam:",k[i].r),m=prompt("Naya mobile:",k[i].m);if(n&&r){k[i].n=n;k[i].r=r;k[i].m=m;localStorage.setItem('k',JSON.stringify(k));filterType(currentFilter)}}
+function edit(i){let n=prompt("Naya naam:",k[i].n),r=prompt("Nayi raqam:",k[i].r),m=prompt("Naya mobile:",k[i].m),due=prompt("Due date YYYY-MM-DD:",k[i].due);if(n&&r){k[i].n=n;k[i].r=r;k[i].m=m;k[i].due=due;localStorage.setItem('k',JSON.stringify(k));filterType(currentFilter)}}
 function togglePaid(i){k[i].p=!k[i].p;localStorage.setItem('k',JSON.stringify(k));filterType(currentFilter)}
 
-function sendSMS(i){let x=k[i];if(!x.m)return alert('Mobile number nahi hai');let msg=`Assalam o Alaikum ${x.n} bhai,%0AAap ka Rs ${x.r} baqi hai.%0ASikander Hayat%0A0314-5587856`;window.open(`sms:${x.m}?body=${msg}`)}
-function bulkSMS(){let unpaid=k.filter(x=>!x.p&&x.m);if(unpaid.length==0)return alert('Koi UNPAID client nahi ya number nahi hai');if(confirm(`${unpaid.length} clients ko SMS bhejna hai?`)){unpaid.forEach((x,i)=>{setTimeout(()=>{let msg=`Assalam o Alaikum ${x.n} bhai,%0AAap ka Rs ${x.r} baqi hai.%0ASikander Hayat%0A0314-5587856`;window.open(`sms:${x.m}?body=${msg}`)},i*2000)})}}
+function sendSMS(i){let x=k[i];if(!x.m)return alert('Mobile number nahi hai');let msg=`Assalam o Alaikum ${x.n} bhai,%0AAap ka Rs ${x.r} baqi hai.%0ADue Date: ${x.due||'N/A'}%0ASikander Hayat%0A0314-5587856`;window.open(`sms:${x.m}?body=${msg}`)}
+function bulkSMS(){let unpaid=k.filter(x=>!x.p&&x.m);if(unpaid.length==0)return alert('Koi UNPAID client nahi');if(confirm(`${unpaid.length} clients ko SMS?`)){unpaid.forEach((x,i)=>{setTimeout(()=>{let msg=`Assalam o Alaikum ${x.n} bhai,%0ARs ${x.r} baqi hai. Due: ${x.due||'N/A'}%0ASikander Hayat%0A0314-5587856`;window.open(`sms:${x.m}?body=${msg}`)},i*2000)})}}
 
-function searchKhata(){let s=document.getElementById('search').value.toLowerCase();filterK=k.filter(x=>x.n.toLowerCase().includes(s));if(currentFilter==='paid')filterK=filterK.filter(x=>x.p);if(currentFilter==='unpaid')filterK=filterK.filter(x=>!x.p);show(filterK)}
-function filterType(type){currentFilter=type;if(type==='all')filterK=k;else if(type==='paid')filterK=k.filter(x=>x.p);else filterK=k.filter(x=>!x.p);searchKhata()}
+function searchKhata(){let s=document.getElementById('search').value.toLowerCase();filterK=k.filter(x=>x.n.toLowerCase().includes(s));if(currentFilter==='paid')filterK=filterK.filter(x=>x.p);if(currentFilter==='unpaid')filterK=filterK.filter(x=>!x.p);if(currentFilter==='overdue')filterK=filterK.filter(x=>!x.p&&isOverdue(x.due));show(filterK)}
+function filterType(type){currentFilter=type;if(type==='all')filterK=k;else if(type==='paid')filterK=k.filter(x=>x.p);else if(type==='unpaid')filterK=k.filter(x=>!x.p);else if(type==='overdue')filterK=k.filter(x=>!x.p&&isOverdue(x.due));searchKhata()}
 
 function showGraph(){document.getElementById('graphSection').style.display='block';updateCharts()}
 function hideGraph(){document.getElementById('graphSection').style.display='none'}
@@ -107,20 +122,18 @@ function hideGraph(){document.getElementById('graphSection').style.display='none
 function updateCharts(){
   let paid=k.filter(x=>x.p).reduce((s,x)=>s+Number(x.r),0);
   let unpaid=k.filter(x=>!x.p).reduce((s,x)=>s+Number(x.r),0);
-
   if(pieChart)pieChart.destroy();
   pieChart=new Chart(document.getElementById('pieChart'),{type:'pie',data:{labels:['Paid','Unpaid'],datasets:[{data:[paid,unpaid],backgroundColor:['#0f0','#f00']}]},options:{plugins:{legend:{labels:{color:'#0f0'}}}}});
-
   let top5=k.sort((a,b)=>Number(b.r)-Number(a.r)).slice(0,5);
   if(barChart)barChart.destroy();
   barChart=new Chart(document.getElementById('barChart'),{type:'bar',data:{labels:top5.map(x=>x.n),datasets:[{label:'Raqam',data:top5.map(x=>x.r),backgroundColor:'#00ff88'}]},options:{scales:{y:{ticks:{color:'#0f0'}},x:{ticks:{color:'#0f0'}}},plugins:{legend:{labels:{color:'#0f0'}}}}});
 }
 
-function share(){if(k.length==0)return alert('Pehle khata add karo');let x='*SIKANDER HAYAT - KHATA LIST*%0A%0A',s=0,p=0;k.forEach(y=>{x+=`${y.p?'✅':'❌'} ${y.n}: Rs ${y.r} - ${y.d}%0A`;s+=Number(y.r);if(y.p)p+=Number(y.r)});x+=`%0A*Total: Rs ${s} | Paid: Rs ${p} | Baqi: Rs ${s-p}*%0A%0AContact: 0314-5587856`;window.open(`https://wa.me/?text=${x}`)}
+function share(){if(k.length==0)return alert('Pehle khata add karo');let x='*SIKANDER HAYAT - KHATA LIST*%0A%0A',s=0,p=0;k.forEach(y=>{let overdue=!y.p&&isOverdue(y.due);x+=`${y.p?'✅':overdue?'🔴':'❌'} ${y.n}: Rs ${y.r} - Due: ${y.due||'N/A'}%0A`;s+=Number(y.r);if(y.p)p+=Number(y.r)});x+=`%0A*Total: Rs ${s} | Paid: Rs ${p} | Baqi: Rs ${s-p}*%0A%0AContact: 0314-5587856`;window.open(`https://wa.me/?text=${x}`)}
 
-function downloadPDF(){if(k.length==0)return alert('Pehle khata add karo');const {jsPDF}=window.jspdf;const doc=new jsPDF();doc.setFontSize(18);doc.text("SIKANDER HAYAT - KHATA LIST",20,20);doc.setFontSize(12);let y=40,s=0,p=0;k.forEach((x,i)=>{doc.text(`${i+1}. ${x.p?'':'[UNPAID]'} ${x.n}: Rs ${x.r} - ${x.m||'No Num'} - ${x.d}`,20,y);y+=10;s+=Number(x.r);if(x.p)p+=Number(x.r);if(y>270){doc.addPage();y=20}});doc.setFontSize(14);doc.text(`Total: Rs ${s} | Paid: Rs ${p} | Baqi: Rs ${s-p}`,20,y+10);doc.text(`Contact: 0314-5587856`,20,y+20);doc.save(`Khata_${new Date().toLocaleDateString('en-GB').replace(/\//g,'-')}.pdf`)}
+function downloadPDF(){if(k.length==0)return alert('Pehle khata add karo');const {jsPDF}=window.jspdf;const doc=new jsPDF();doc.setFontSize(18);doc.text("SIKANDER HAYAT - KHATA LIST",20,20);doc.setFontSize(12);let y=40,s=0,p=0;k.forEach((x,i)=>{let overdue=!x.p&&isOverdue(x.due);doc.text(`${i+1}. ${x.p?'[PAID]':overdue?'[OVERDUE]':'[UNPAID]'} ${x.n}: Rs ${x.r} - Due: ${x.due||'N/A'}`,20,y);y+=10;s+=Number(x.r);if(x.p)p+=Number(x.r);if(y>270){doc.addPage();y=20}});doc.setFontSize(14);doc.text(`Total: Rs ${s} | Paid: Rs ${p} | Baqi: Rs ${s-p}`,20,y+10);doc.text(`Contact: 0314-5587856`,20,y+20);doc.save(`Khata_${new Date().toLocaleDateString('en-GB').replace(/\//g,'-')}.pdf`)}
 
 show();
 </script>
 </body>
-  </html>
+</html>
