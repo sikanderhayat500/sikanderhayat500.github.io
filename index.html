@@ -2,70 +2,160 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tally NO LOCK - Sikander Hayat</title>
+<title>Tally Pro Max - Sikander Hayat</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{background:#000;color:#00ff88;font-family:monospace;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px}
 .card{border:2px solid #00ff88;border-radius:15px;padding:20px;width:90%;max-width:400px;box-shadow:0 0 20px #00ff88;text-align:center}
 input{width:90%;padding:10px;margin:8px 0;background:#111;border:1px solid #00ff88;color:#fff;border-radius:5px}
 button{width:95%;padding:10px;margin:8px 0;background:#00ff88;color:#000;border:none;border-radius:5px;font-weight:bold;cursor:pointer}
 .item{text-align:left;background:#111;padding:8px;margin:5px 0;border-radius:5px;border-left:3px solid #00ff88;position:relative;display:flex;gap:10px}
+.search{background:#001a0d;border:2px solid #0f0}
 .paid{background:#0f02;border-left:3px solid #0f0}
 .unpaid{background:#f002;border-left:3px solid #f00}
 .overdue{background:#f40!important;border:3px solid #f00!important;animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
 .tag{position:absolute;top:5px;right:5px;font-size:10px;padding:2px 6px;border-radius:3px}
+.chartbox{background:#111;padding:10px;border-radius:10px;margin:10px 0}
 .avatar{width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid #00ff88}
 .file-label{display:block;background:#001a0d;border:2px dashed #00ff88;padding:15px;border-radius:5px;margin:8px auto;width:90%;cursor:pointer}
+.recording{background:#f00!important;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.print-only{display:none}
+@media print{body *{visibility:hidden}.print-area,.print-area *{visibility:visible}.print-area{position:absolute;left:0;top:0;width:100%}.no-print{display:none!important}}
 </style>
 </head>
 <body>
-<div class="card">
-  <h1 style="color:#00ff88">⚡ TALLY NO LOCK ⚡</h1>
+<div class="card no-print">
+  <h1 style="color:#00ff88">⚡ TALLY PRO MAX ⚡</h1>
   <h2>SIKANDER HAYAT</h2>
   <p id="time" style="color:#0ff"></p>
   <p style="color:#0f0">Battery: <span id="bat">--</span>%</p>
+  <button onclick="showGraph()" style="background:#f0f;color:#fff;padding:5px">📊 GRAPH</button>
+
+  <input id="search" class="search" placeholder="🔍 Naam se search karo..." oninput="searchKhata()">
+
+  <div style="display:flex;gap:5px">
+    <button onclick="filterType('all')" style="background:#555">SAB</button>
+    <button onclick="filterType('paid')" style="background:#0a0">PAID</button>
+    <button onclick="filterType('unpaid')" style="background:#a00">UNPAID</button>
+    <button onclick="filterType('overdue')" style="background:#f40">OVERDUE</button>
+  </div>
 
   <input id="n" placeholder="Client Ka Naam">
   <input id="r" type="number" placeholder="Raqam">
-  <input id="m" type="number" placeholder="Mobile: 0314xxxxxxx - CALL KE LIYE ZAROORI">
+  <input id="m" type="number" placeholder="Mobile: 0314xxxxxxx - CALL/SMS KE LIYE">
   <input id="due" type="date">
 
   <label for="photo" class="file-label">📸 PHOTO LAGAO</label>
-  <input id="photo" type="file" accept="image/*" style="display:none">
+  <input id="photo" type="file" accept="image/*" capture="environment" style="display:none">
   <p id="photoName" style="color:#0ff;font-size:11px"></p>
 
+  <button id="recBtn" onclick="toggleRecord()">🎙️ VOICE NOTE RECORD</button>
+  <p id="recStatus" style="color:#f00;font-size:11px"></p>
+
   <button onclick="add()">+ ADD KHATA</button>
-  <button onclick="clearAll()" style="background:#f00;color:#fff">🗑️ SAB DELETE KARO</button>
 
   <div id="list" style="margin-top:15px"></div>
   <h3>Total: Rs <span id="t">0</span><br>Paid: Rs <span id="tp">0</span><br>Baqi: Rs <span id="tb" style="color:#f00">0</span></h3>
 
+  <div id="graphSection" style="display:none">
+    <div class="chartbox">
+      <h4>PAID vs UNPAID</h4>
+      <canvas id="pieChart"></canvas>
+    </div>
+    <div class="chartbox">
+      <h4>TOP 5 CLIENTS</h4>
+      <canvas id="barChart"></canvas>
+    </div>
+    <button onclick="hideGraph()" style="background:#555">✖ GRAPH BAND KARO</button>
+  </div>
+
+  <button onclick="printReceipt()" style="background:#fff;color:#000">🖨️ PRINT RECEIPT</button>
+  <button onclick="bulkSMS()" style="background:#ff0;color:#000">📲 SAB UNPAID KO SMS</button>
   <button onclick="share()" style="background:#25D366;color:#fff">📲 WhatsApp Share</button>
+  <button onclick="downloadPDF()" style="background:#f40;color:#fff">📄 PDF Download</button>
+  <p style="color:#555;margin-top:20px;font-size:12px">Made in Risalpur Cantt | Pakistan</p>
 </div>
+
+<div id="printArea" class="print-area print-only"></div>
 
 <script>
 let k=JSON.parse(localStorage.getItem('k'))||[];
+let filterK=k;
+let currentFilter='all';
+let pieChart,barChart;
+let mediaRecorder,chunks=[],tempAudio=null,isRecording=false;
 
 document.getElementById('photo').addEventListener('change',function(e){
   if(e.target.files[0])document.getElementById('photoName').innerText='✅ Photo: '+e.target.files[0].name
 });
 
-setInterval(()=>{document.getElementById('time').innerText=new Date().toLocaleString('en-GB',{timeStyle:'medium'})},1000);
+setInterval(()=>{document.getElementById('time').innerText=new Date().toLocaleString('en-GB',{dateStyle:'full',timeStyle:'medium'})},1000);
 navigator.getBattery().then(b=>{let u=()=>document.getElementById('bat').innerText=Math.round(b.level*100);u();b.addEventListener('levelchange',u)});
 
 function isOverdue(dueDate){if(!dueDate)return false;return new Date(dueDate)<new Date().setHours(0,0,0,0)}
 
-function show(){let l=document.getElementById('list'),t=0,tp=0;l.innerHTML='';k.forEach((x,i)=>{let status=x.p?'paid':'unpaid';let overdue=!x.p&&isOverdue(x.due);if(overdue)status+=' overdue';let photo=x.photo?`<img src="${x.photo}" class="avatar">`:`<div class="avatar" style="background:#333;display:flex;align-items:center;justify-content:center">👤</div>`;let callBtn=x.m?`<a href="tel:${x.m}"><button style="background:#0f0;color:#000;border:none;padding:5px 10px;border-radius:3px;margin:5px 5px 0 0;font-weight:bold">📞 CALL KARO</button></a>`:'';let smsBtn=x.m?`<button onclick="sendSMS(${i})" style="background:#0ff;color:#000;border:none;padding:5px 10px;border-radius:3px;margin:5px 5px 0 0;font-weight:bold">📲 SMS</button>`:'';l.innerHTML+=`<div class="item ${status}">${photo}<div style="flex:1"><span class="tag" style="background:${x.p?'#0a0':overdue?'#f40':'#a00'}">${x.p?'PAID':overdue?'OVERDUE':'UNPAID'}</span><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">📱 ${x.m||'No Num'} | Due: ${x.due||'N/A'}</small><br>${callBtn}${smsBtn}<button onclick="togglePaid(${i})" style="background:${x.p?'orange':'green'};color:#fff;border:none;padding:5px 10px;border-radius:3px;margin:5px 5px 0 0">${x.p?'UNPAID':'PAID'}</button><button onclick="del(${i})" style="background:red;color:#fff;border:none;padding:5px 10px;border-radius:3px;margin:5px 0 0 0">X DELETE</button></div></div>`;t+=Number(x.r);if(x.p)tp+=Number(x.r)});document.getElementById('t').innerText=t;document.getElementById('tp').innerText=tp;document.getElementById('tb').innerText=t-tp}
+async function toggleRecord(){
+  if(!isRecording){
+    try{
+      let stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      mediaRecorder=new MediaRecorder(stream);
+      chunks=[];
+      mediaRecorder.ondataavailable=e=>chunks.push(e.data);
+      mediaRecorder.onstop=()=>{
+        let blob=new Blob(chunks,{type:'audio/webm'});
+        let reader=new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend=()=>{tempAudio=reader.result;document.getElementById('recStatus').innerText='✅ Voice saved! Add khata karo';document.getElementById('recBtn').classList.remove('recording')};
+      };
+      mediaRecorder.start();
+      isRecording=true;
+      document.getElementById('recBtn').classList.add('recording');
+      document.getElementById('recStatus').innerText='🔴 Recording... Dobara dabao stop karne ke liye';
+    }catch(e){alert('Mic permission do bhai')}
+  }else{
+    mediaRecorder.stop();
+    isRecording=false;
+  }
+}
 
-async function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,m=document.getElementById('m').value,due=document.getElementById('due').value;let photoFile=document.getElementById('photo').files[0];let photo='';if(photoFile){photo=await toBase64(photoFile)}if(n&&r&&m){k.push({n,r,m,due,photo,p:false});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';document.getElementById('m').value='';document.getElementById('due').value='';document.getElementById('photo').value='';document.getElementById('photoName').innerText='';show();alert('✅ Khata add ho gaya! CALL button check karo')}else alert('⚠️ Naam, Raqam aur Mobile 3no zaroori hain CALL button ke liye')}
+function show(list=filterK){let l=document.getElementById('list'),t=0,tp=0;l.innerHTML='';list.forEach((x)=>{let i=k.indexOf(x);let status=x.p?'paid':'unpaid';let overdue=!x.p&&isOverdue(x.due);if(overdue)status+=' overdue';let photo=x.photo?`<img src="${x.photo}" class="avatar">`:`<div class="avatar" style="background:#333;display:flex;align-items:center;justify-content:center">👤</div>`;let voiceBtn=x.audio?`<button onclick="playVoice(${i})" style="background:#0ff;color:#000;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">▶️ PLAY</button>`:'';let callBtn=x.m?`<a href="tel:${x.m}"><button style="background:#0f0;color:#000;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0;font-weight:bold">📞 CALL</button></a>`:'';l.innerHTML+=`<div class="item ${status}">${photo}<div style="flex:1"><span class="tag" style="background:${x.p?'#0a0':overdue?'#f40':'#a00'}">${x.p?'PAID':overdue?'OVERDUE':'UNPAID'}</span><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">📱 ${x.m||'No Num'} | Due: ${x.due||'N/A'}</small><br>${voiceBtn}${callBtn}<button onclick="togglePaid(${i})" style="background:${x.p?'orange':'green'};color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">${x.p?'UNPAID':'PAID'}</button>${x.m?`<button onclick="sendSMS(${i})" style="background:#0ff;color:#000;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">📲 SMS</button>`:''}<button onclick="edit(${i})" style="background:orange;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">EDIT</button><button onclick="del(${i})" style="background:red;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 0 0 0">X</button></div></div>`;t+=Number(x.r);if(x.p)tp+=Number(x.r)});document.getElementById('t').innerText=t;document.getElementById('tp').innerText=tp;document.getElementById('tb').innerText=t-tp}
+
+function playVoice(i){let audio=new Audio(k[i].audio);audio.play()}
+
+async function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,m=document.getElementById('m').value,due=document.getElementById('due').value;let photoFile=document.getElementById('photo').files[0];let photo='';if(photoFile){photo=await toBase64(photoFile)}if(n&&r){k.push({n,r,m,due,photo,audio:tempAudio,p:false});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';document.getElementById('m').value='';document.getElementById('due').value='';document.getElementById('photo').value='';document.getElementById('photoName').innerText='';document.getElementById('recStatus').innerText='';tempAudio=null;document.getElementById('search').value='';filterType(currentFilter)}else alert('Naam aur Raqam zaroori hai')}
 
 function toBase64(file){return new Promise((res,rej)=>{let r=new FileReader();r.readAsDataURL(file);r.onload=()=>res(r.result);r.onerror=e=>rej(e)})}
-function del(i){k.splice(i,1);localStorage.setItem('k',JSON.stringify(k));show()}
-function togglePaid(i){k[i].p=!k[i].p;localStorage.setItem('k',JSON.stringify(k));show()}
-function sendSMS(i){let x=k[i];let msg=`Assalam o Alaikum ${x.n} bhai,%0ARs ${x.r} baqi hai. Due: ${x.due||'N/A'}%0ASikander Hayat%0A0314-5587856`;window.open(`sms:${x.m}?body=${msg}`)}
-function share(){let x='*SIKANDER HAYAT - KHATA*%0A%0A',s=0,p=0;k.forEach(y=>{x+=`${y.p?'✅':'❌'} ${y.n}: Rs ${y.r} - ${y.m}%0A`;s+=Number(y.r);if(y.p)p+=Number(y.r)});x+=`%0A*Total: Rs ${s} | Baqi: Rs ${s-p}*`;window.open(`https://wa.me/?text=${x}`)}
-function clearAll(){if(confirm('Saray khatay delete kar dun?')){k=[];localStorage.setItem('k',JSON.stringify(k));show()}}
+function del(i){k.splice(i,1);localStorage.setItem('k',JSON.stringify(k));filterType(currentFilter)}
+function edit(i){let n=prompt("Naya naam:",k[i].n),r=prompt("Nayi raqam:",k[i].r),m=prompt("Naya mobile:",k[i].m),due=prompt("Due date YYYY-MM-DD:",k[i].due);if(n&&r){k[i].n=n;k[i].r=r;k[i].m=m;k[i].due=due;localStorage.setItem('k',JSON.stringify(k));filterType(currentFilter)}}
+function togglePaid(i){k[i].p=!k[i].p;localStorage.setItem('k',JSON.stringify(k));filterType(currentFilter)}
+
+function sendSMS(i){let x=k[i];if(!x.m)return alert('Mobile number nahi hai');let msg=`Assalam o Alaikum ${x.n} bhai,%0ARs ${x.r} baqi hai. Due: ${x.due||'N/A'}%0ASikander Hayat%0A0314-5587856`;window.open(`sms:${x.m}?body=${msg}`)}
+function bulkSMS(){let unpaid=k.filter(x=>!x.p&&x.m);if(unpaid.length==0)return alert('Koi UNPAID client nahi');if(confirm(`${unpaid.length} clients ko SMS?`)){unpaid.forEach((x,i)=>{setTimeout(()=>{let msg=`Assalam o Alaikum ${x.n} bhai,%0ARs ${x.r} baqi hai. Due: ${x.due||'N/A'}%0ASikander Hayat%0A0314-5587856`;window.open(`sms:${x.m}?body=${msg}`)},i*2000)})}}
+
+function searchKhata(){let s=document.getElementById('search').value.toLowerCase();filterK=k.filter(x=>x.n.toLowerCase().includes(s));if(currentFilter==='paid')filterK=filterK.filter(x=>x.p);if(currentFilter==='unpaid')filterK=filterK.filter(x=>!x.p);if(currentFilter==='overdue')filterK=filterK.filter(x=>!x.p&&isOverdue(x.due));show(filterK)}
+function filterType(type){currentFilter=type;if(type==='all')filterK=k;else if(type==='paid')filterK=k.filter(x=>x.p);else if(type==='unpaid')filterK=k.filter(x=>!x.p);else if(type==='overdue')filterK=k.filter(x=>!x.p&&isOverdue(x.due));searchKhata()}
+
+function showGraph(){document.getElementById('graphSection').style.display='block';updateCharts()}
+function hideGraph(){document.getElementById('graphSection').style.display='none'}
+
+function updateCharts(){
+  let paid=k.filter(x=>x.p).reduce((s,x)=>s+Number(x.r),0);
+  let unpaid=k.filter(x=>!x.p).reduce((s,x)=>s+Number(x.r),0);
+  if(pieChart)pieChart.destroy();
+  pieChart=new Chart(document.getElementById('pieChart'),{type:'pie',data:{labels:['Paid','Unpaid'],datasets:[{data:[paid,unpaid],backgroundColor:['#0f0','#f00']}]},options:{plugins:{legend:{labels:{color:'#0f0'}}}}});
+  let top5=k.sort((a,b)=>Number(b.r)-Number(a.r)).slice(0,5);
+  if(barChart)barChart.destroy();
+  barChart=new Chart(document.getElementById('barChart'),{type:'bar',data:{labels:top5.map(x=>x.n),datasets:[{label:'Raqam',data:top5.map(x=>x.r),backgroundColor:'#00ff88'}]},options:{scales:{y:{ticks:{color:'#0f0'}},x:{ticks:{color:'#0f0'}}},plugins:{legend:{labels:{color:'#0f0'}}}}});
+}
+
+function printReceipt(){let s=0,p=0;let html=`<div style="font-family:monospace;padding:20px;max-width:800px;margin:auto"><h1 style="text-align:center">SIKANDER HAYAT - KHATA RECEIPT</h1><p style="text-align:center">Date: ${new Date().toLocaleDateString('en-GB')}</p><hr><table style="width:100%;border-collapse:collapse"><tr style="background:#000;color:#fff"><th style="border:1px solid #000;padding:8px">Name</th><th style="border:1px solid #000;padding:8px">Amount</th><th style="border:1px solid #000;padding:8px">Mobile</th><th style="border:1px solid #000;padding:8px">Due</th><th style="border:1px solid #000;padding:8px">Status</th></tr>`;k.forEach(x=>{let overdue=!x.p&&isOverdue(x.due);html+=`<tr><td style="border:1px solid #000;padding:8px">${x.n}</td><td style="border:1px solid #000;padding:8px">Rs ${x.r}</td><td style="border:1px solid #000;padding:8px">${x.m||'-'}</td><td style="border:1px solid #000;padding:8px">${x.due||'-'}</td><td style="border:1px solid #000;padding:8px">${x.p?'PAID':overdue?'OVERDUE':'UNPAID'}</td></tr>`;s+=Number(x.r);if(x.p)p+=Number(x.r)});html+=`</table><h3>Total: Rs ${s} | Paid: Rs ${p} | Baqi: Rs ${s-p}</h3><p style="text-align:center;margin-top:40px">Contact: 0314-5587856 | Made in Risalpur Cantt</p></div>`;document.getElementById('printArea').innerHTML=html;window.print()}
+
+function share(){if(k.length==0)return alert('Pehle khata add karo');let x='*SIKANDER HAYAT - KHATA LIST*%0A%0A',s=0,p=0;k.forEach(y=>{let overdue=!y.p&&isOverdue(y.due);x+=`${y.p?'✅':overdue?'🔴':'❌'} ${y.n}: Rs ${y.r} - ${y.m||'No Num'}%0A`;s+=Number(y.r);if(y.p)p+=Number(y.r)});x+=`%0A*Total: Rs ${s} | Paid: Rs ${p} | Baqi: Rs ${s-p}*%0A%0AContact: 0314-5587856`;window.open(`https://wa.me/?text=${x}`)}
+
+function downloadPDF(){if(k.length==0)return alert('Pehle khata add karo');const {jsPDF}=window.jspdf;const doc=new jsPDF();doc.setFontSize(18);doc.text("SIKANDER HAYAT - KHATA LIST",20,20);doc.setFontSize(12);let y=40,s=0,p=0;k.forEach((x,i)=>{let overdue=!x.p&&isOverdue(x.due);doc.text(`${i+1}. ${x.p?'':overdue?'[OVERDUE]':'[UNPAID]'} ${x.n}: Rs ${x.r} - ${x.m||'No Num'} - Due: ${x.due||'N/A'}`,20,y);y+=10;s+=Number(x.r);if(x.p)p+=Number(x.r);if(y>270){doc.addPage();y=20}});doc.setFontSize(14);doc.text(`Total: Rs ${s} | Paid: Rs ${p} | Baqi: Rs ${s-p}`,20,y+10);doc.text(`Contact: 0314-5587856`,20,y+20);doc.save(`Khata_${new Date().toLocaleDateString('en-GB').replace(/\//g,'-')}.pdf`)}
 
 show();
 </script>
