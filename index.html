@@ -1,175 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tally Tracker</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background: #0a0a0a;
-            color: #00ff88;
-            font-family: 'Courier New', monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            border: 2px solid #00ff88;
-            border-radius: 20px;
-            padding: 30px 40px;
-            text-align: center;
-            box-shadow: 0 0 30px #00ff8855;
-            max-width: 400px;
-            width: 100%;
-        }
-        h1 {
-            font-size: 28px;
-            margin-bottom: 15px;
-            text-shadow: 0 0 10px #00ff88;
-        }
-        .name {
-            font-size: 20px;
-            color: #ffffff;
-            margin-bottom: 15px;
-        }
-        .time {
-            font-size: 16px;
-            color: #00ccff;
-            margin-bottom: 10px;
-        }
-        .battery {
-            font-size: 16px;
-            color: #00ff88;
-            margin-bottom: 15px;
-        }
-        .quote {
-            font-size: 16px;
-            color: #ff4444;
-            margin: 20px 0;
-        }
-        .status {
-            font-size: 16px;
-            color: #00ff88;
-            margin-bottom: 20px;
-        }
-        .footer {
-            font-size: 12px;
-            color: #888888;
-            margin-top: 20px;
-        }
-    </style>
+  <title>Tally Tracker - Sikander Hayat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#00ff88">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      background: #000;
+      color: #00ff88;
+      font-family: Arial;
+      text-align: center;
+      padding: 20px;
+    }
+    input {
+      width: 90%;
+      padding: 12px;
+      margin: 5px;
+      background: #111;
+      border: 1px solid #00ff88;
+      color: #fff;
+      border-radius: 5px;
+    }
+    button {
+      width: 95%;
+      padding: 12px;
+      margin: 5px;
+      background: #00ff88;
+      color: #000;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    #khataList p {
+      text-align: left;
+      background: #111;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 5px 0;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>⚡ TALLY TRACKER ⚡</h1>
-        <div class="name">SIKANDER HAYAT</div>
-        <div class="time" id="time">Loading...</div>
-        <div class="battery">Battery: 43%</div>
-        <div class="quote">Apna Kaam Apni Marzi</div>
-        <div class="status">ONLINE MODE ACTIVE</div>
-       <p>📞 0314-5587856</p>
-       <div style="margin-top:20px;">
-  <input id="naam" placeholder="Client Ka Naam" style="width:90%;padding:8px;margin:5px;background:#000;color:#00ff88;border:1px solid #00ff88;border-radius:5px;">
-  <input id="raqam" type="number" placeholder="Raqam" style="width:90%;padding:8px;margin:5px;background:#000;color:#00ff88;border:1px solid #00ff88;border-radius:5px;">
-  <button onclick="addKhata()" style="width:95%;padding:10px;margin:5px;background:#00ff88;color:#000;font-weight:bold;border:none;border-radius:5px;">+ ADD KHATA</button>
-  <div id="khataList" style="margin-top:15px;text-align:left;"></div>
-  <h3 style="color:#00ff88;">Total: Rs <span id="total">0</span></h3>
-</div><button onclick="editKhata(${i})" style="float:right;background:orange;color:white;border:none;margin-left:5px;">EDIT</button>
-<button onclick="deleteKhata(${i})" style="float:right;background:red;color:white;border:none;">X</button>
-function editKhata(index) {
-  let nayaNaam = prompt("Naya naam likho:", khatey[index].naam);
-  let nayiRaqam = prompt("Nayi raqam likho:", khatey[index].raqam);
-  
-  if(nayaNaam && nayiRaqam) {
-    khatey[index].naam = nayaNaam;
-    khatey[index].raqam = nayiRaqam;
-    localStorage.setItem('khatey', JSON.stringify(khatey));
-    showKhatey();
-  }
-}
-<script>
-function shareKhata() {
-  if(khatey.length === 0) {
-    alert('Pehle khata add karo');
-    return;
-  }
-  let text = `*SIKANDER HAYAT - KHATA LIST*%0A%0A`;
-  let total = 0;
-  khatey.forEach(k => {
-    text += `${k.naam}: Rs ${k.raqam} - ${k.tareekh || ''}%0A`;
-    total += Number(k.raqam);
-  });
-  text += `%0A*Total: Rs ${total}*%0A%0AContact: 0314-5587856`;
-  window.open(`https://wa.me/?text=${text}`, '_blank');
-}
-</script>
-<script>
-let khatey = JSON.parse(localStorage.getItem('khatey')) || [];
 
-function showKhatey() {
-  let list = document.getElementById('khataList');
-  let total = 0;
-  list.innerHTML = '';
-  khatey.forEach((k, i) => {
-    total += Number(k.raqam);
-    list.innerHTML += `<p style="color:#fff;border-bottom:1px solid #00ff88;padding:5px;">
-      ${k.naam}: Rs ${k.raqam} 
-      <button onclick="deleteKhata(${i})" style="float:right;background:red;color:white;border:none;">X</button>
-    </p>`;
-  });
-  document.getElementById('total').innerText = total;
-}
-
-function addKhata() {
-  let naam = document.getElementById('naam').value;
-  let raqam = document.getElementById('raqam').value;
-  let tareekh = new Date().toLocaleDateString('en-GB');
-  
-  if(naam && raqam) {
-    khatey.push({naam, raqam, tareekh});
-    localStorage.setItem('khatey', JSON.stringify(khatey));
-    document.getElementById('naam').value = '';
-    document.getElementById('raqam').value = '';
-    showKhatey();
-  } else {
-    alert('Naam aur Raqam dono likho');
-  }
-}
-
-function deleteKhata(i) {
-  khatey.splice(i, 1);
-  localStorage.setItem('khatey', JSON.stringify(khatey));
-  showKhatey();
-}
-
-showKhatey();
-</script>
-        <div class="footer">Made in Risalpur Cantt| Pakistan</div>
-    </div>
-
-    <script>
-        function updateTime() {
-            const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            };
-            document.getElementById('time').textContent = now.toLocaleDateString('en-US', options);
-        }
-        updateTime();
-        setInterval(updateTime, 1000);
-    </script>
-</body>
-</html>
+  <h1>⚡ SIKANDER HAYAT</h1>
+  <p style="color:#0ff" id="datetime"></p>
+  <p style="color:#0
