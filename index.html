@@ -1,38 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tally Tracker</title>
-<style>
-body{background:#000;color:#00ff88;font-family:sans-serif;text-align:center;padding:15px}
-input{width:90%;padding:10px;margin:5px;background:#111;border:1px solid #00ff88;color:#fff}
-button{width:95%;padding:10px;margin:5px;background:#00ff88;color:#000;border:none;font-weight:bold}
-p{text-align:left;background:#111;padding:8px;margin:5px 0}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tally Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0a0a;
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            border: 2px solid #00ff88;
+            border-radius: 20px;
+            padding: 30px 40px;
+            text-align: center;
+            box-shadow: 0 0 30px #00ff8855;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px #00ff88;
+        }
+        .name {
+            font-size: 20px;
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+        .time {
+            font-size: 16px;
+            color: #00ccff;
+            margin-bottom: 10px;
+        }
+        .battery {
+            font-size: 16px;
+            color: #00ff88;
+            margin-bottom: 15px;
+        }
+        .quote {
+            font-size: 16px;
+            color: #ff4444;
+            margin: 20px 0;
+        }
+        .status {
+            font-size: 16px;
+            color: #00ff88;
+            margin-bottom: 20px;
+        }
+        .footer {
+            font-size: 12px;
+            color: #888888;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-<h1>⚡ SIKANDER HAYAT</h1>
-<p id="time"></p>
-<p>Battery: <span id="bat">--</span>%</p>
-<h3 style="color:red">Apna Kaam Apni Marzi</h3>
-<h3 style="color:lime">ONLINE MODE ACTIVE</h3>
-<p>📞 0314-5587856</p>
-<input id="n" placeholder="Naam">
-<input id="r" type="number" placeholder="Raqam">
-<button onclick="add()">+ ADD KHATA</button>
-<div id="list"></div>
-<h3>Total: Rs <span id="t">0</span></h3>
-<button onclick="share()" style="background:#25D366;color:#fff">📲 WhatsApp Share</button>
-<script>
-let k=JSON.parse(localStorage.getItem('k'))||[];
-setInterval(()=>{document.getElementById('time').innerText=new Date().toLocaleString()},1000);
-navigator.getBattery().then(b=>{let u=()=>document.getElementById('bat').innerText=Math.round(b.level*100);u();b.addEventListener('levelchange',u)});
-function show(){let l=document.getElementById('list'),t=0;l.innerHTML='';k.forEach((x,i)=>{l.innerHTML+=`<p><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">Date: ${x.d}</small><button onclick="del(${i})" style="float:right;background:red;color:#fff;border:none">X</button><button onclick="edit(${i})" style="float:right;background:orange;color:#fff;border:none;margin-right:5px">EDIT</button></p>`;t+=Number(x.r)});document.getElementById('t').innerText=t}
-function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,d=new Date().toLocaleDateString('en-GB');if(n&&r){k.push({n,r,d});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';show()}else alert('Naam aur Raqam likho')}
-function del(i){k.splice(i,1);localStorage.setItem('k',JSON.stringify(k));show()}
-function edit(i){let n=prompt("Naya naam:",k[i].n),r=prompt("Nayi raqam:",k[i].r);if(n&&r){k[i].n=n;k[i].r=r;localStorage.setItem('k',JSON.stringify(k));show()}}
-function share(){if(k.length==0)return alert('Pehle khata add karo');let x='*SIKANDER HAYAT - KHATA LIST*%0A%0A',s=0;k.forEach(y=>{x+=`${y.n}: Rs ${y.r} - ${y.d}%0A`;s+=Number(y.r)});x+=`%0A*Total: Rs ${s}*%0A%0AContact: 0314-5587856`;window.open(`https://wa.me/?text=${x}`)}
-show();
-</script>
+    <div class="container">
+        <h1>⚡ TALLY TRACKER ⚡</h1>
+        <div class="name">SIKANDER HAYAT</div>
+        <div class="time" id="time">Loading...</div>
+        <div class="battery">Battery: 43%</div>
+        <div class="quote">Apna Kaam Apni Marzi</div>
+        <div class="status">ONLINE MODE ACTIVE</div>
+        <div class="footer">Made in Risalpur Cantt | Pakistan</div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('time').textContent = now.toLocaleDateString('en-US', options);
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
 </body>
 </html>
