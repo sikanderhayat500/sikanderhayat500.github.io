@@ -93,7 +93,7 @@ function shareKhata() {
   let text = `*SIKANDER HAYAT - KHATA LIST*%0A%0A`;
   let total = 0;
   khatey.forEach(k => {
-    text += `${k.naam}: Rs ${k.raqam}%0A`;
+    text += `${k.naam}: Rs ${k.raqam} - ${k.tareekh || ''}%0A`;
     total += Number(k.raqam);
   });
   text += `%0A*Total: Rs ${total}*%0A%0AContact: 0314-5587856`;
