@@ -75,6 +75,53 @@
         <div class="quote">Apna Kaam Apni Marzi</div>
         <div class="status">ONLINE MODE ACTIVE</div>
        <p>📞 0314-5587856</p>
+       <div style="margin-top:20px;">
+  <input id="naam" placeholder="Client Ka Naam" style="width:90%;padding:8px;margin:5px;background:#000;color:#00ff88;border:1px solid #00ff88;border-radius:5px;">
+  <input id="raqam" type="number" placeholder="Raqam" style="width:90%;padding:8px;margin:5px;background:#000;color:#00ff88;border:1px solid #00ff88;border-radius:5px;">
+  <button onclick="addKhata()" style="width:95%;padding:10px;margin:5px;background:#00ff88;color:#000;font-weight:bold;border:none;border-radius:5px;">+ ADD KHATA</button>
+  <div id="khataList" style="margin-top:15px;text-align:left;"></div>
+  <h3 style="color:#00ff88;">Total: Rs <span id="total">0</span></h3>
+</div>
+
+<script>
+let khatey = JSON.parse(localStorage.getItem('khatey')) || [];
+
+function showKhatey() {
+  let list = document.getElementById('khataList');
+  let total = 0;
+  list.innerHTML = '';
+  khatey.forEach((k, i) => {
+    total += Number(k.raqam);
+    list.innerHTML += `<p style="color:#fff;border-bottom:1px solid #00ff88;padding:5px;">
+      ${k.naam}: Rs ${k.raqam} 
+      <button onclick="deleteKhata(${i})" style="float:right;background:red;color:white;border:none;">X</button>
+    </p>`;
+  });
+  document.getElementById('total').innerText = total;
+}
+
+function addKhata() {
+  let naam = document.getElementById('naam').value;
+  let raqam = document.getElementById('raqam').value;
+  if(naam && raqam) {
+    khatey.push({naam, raqam});
+    localStorage.setItem('khatey', JSON.stringify(khatey));
+    document.getElementById('naam').value = '';
+    document.getElementById('raqam').value = '';
+    showKhatey();
+  } else {
+    alert('Naam aur Raqam dono likho');
+  }
+}
+
+function deleteKhata(i) {
+  khatey.splice(i, 1);
+  localStorage.setItem('khatey', JSON.stringify(khatey));
+  showKhatey();
+}
+
+showKhatey();
+</script>
         <div class="footer">Made in Risalpur Cantt| Pakistan</div>
     </div>
 
