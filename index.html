@@ -1,39 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tally Tracker - Sikander Hayat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body{background:#000;color:#00ff88;font-family:Arial;text-align:center;padding:20px}
-    input{width:90%;padding:12px;margin:5px;background:#111;border:1px solid #00ff88;color:#fff;border-radius:5px}
-    button{width:95%;padding:12px;margin:5px;background:#00ff88;color:#000;border:none;border-radius:5px;font-weight:bold}
-  </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tally Tracker</title>
+<style>
+body{background:#000;color:#00ff88;font-family:sans-serif;text-align:center;padding:15px}
+input{width:90%;padding:10px;margin:5px;background:#111;border:1px solid #00ff88;color:#fff}
+button{width:95%;padding:10px;margin:5px;background:#00ff88;color:#000;border:none;font-weight:bold}
+p{text-align:left;background:#111;padding:8px;margin:5px 0}
+</style>
 </head>
 <body>
-  <h1>⚡ SIKANDER HAYAT</h1>
-  <p id="datetime"></p>
-  <p>Battery: <span id="battery">--</span>%</p>
-  <h3 style="color:#f00">Apna Kaam Apni Marzi</h3>
-  <h3 style="color:#0f0">ONLINE MODE ACTIVE</h3>
-  <p>📞 0314-5587856</p>
-  <input id="naam" placeholder="Client Ka Naam">
-  <input id="raqam" type="number" placeholder="Raqam">
-  <button onclick="addKhata()">+ ADD KHATA</button>
-  <div id="khataList" style="margin-top:15px"></div>
-  <h3>Total: Rs <span id="total">0</span></h3>
-  <button onclick="shareKhata()" style="background:#25D366;color:#fff">📲 WhatsApp Pe Share Karo</button>
-  <p style="color:#555;margin-top:30px">Made in Risalpur Cantt | Pakistan</p>
+<h1>⚡ SIKANDER HAYAT</h1>
+<p id="time"></p>
+<p>Battery: <span id="bat">--</span>%</p>
+<h3 style="color:red">Apna Kaam Apni Marzi</h3>
+<h3 style="color:lime">ONLINE MODE ACTIVE</h3>
+<p>📞 0314-5587856</p>
+<input id="n" placeholder="Naam">
+<input id="r" type="number" placeholder="Raqam">
+<button onclick="add()">+ ADD KHATA</button>
+<div id="list"></div>
+<h3>Total: Rs <span id="t">0</span></h3>
+<button onclick="share()" style="background:#25D366;color:#fff">📲 WhatsApp Share</button>
 <script>
-let khatey=JSON.parse(localStorage.getItem('khatey'))||[];
-function updateDateTime(){document.getElementById('datetime').innerText=new Date().toLocaleString('en-GB')}
-setInterval(updateDateTime,1000);updateDateTime();
-navigator.getBattery().then(b=>{function u(){document.getElementById('battery').innerText=Math.round(b.level*100)}u();b.addEventListener('levelchange',u)});
-function showKhatey(){let l=document.getElementById('khataList'),t=0;l.innerHTML='';khatey.forEach((k,i)=>{l.innerHTML+=`<p style="color:#fff;border-bottom:1px solid #00ff88;padding:10px;text-align:left"><b>${k.naam}</b>: Rs ${k.raqam}<br><small style="color:#888">Date: ${k.tareekh||'N/A'}</small><button onclick="deleteKhata(${i})" style="float:right;background:red;color:white;border:none;padding:5px 10px;border-radius:3px">X</button><button onclick="editKhata(${i})" style="float:right;background:orange;color:white;border:none;padding:5px 10px;border-radius:3px;margin-right:5px">EDIT</button></p>`;t+=Number(k.raqam)});document.getElementById('total').innerText=t}
-function addKhata(){let n=document.getElementById('naam').value,r=document.getElementById('raqam').value,t=new Date().toLocaleDateString('en-GB');if(n&&r){khatey.push({naam:n,raqam:r,tareekh:t});localStorage.setItem('khatey',JSON.stringify(khatey));document.getElementById('naam').value='';document.getElementById('raqam').value='';showKhatey()}else{alert('Naam aur Raqam dono likho')}}
-function deleteKhata(i){khatey.splice(i,1);localStorage.setItem('khatey',JSON.stringify(khatey));showKhatey()}
-function editKhata(i){let n=prompt("Naya naam likho:",khatey[i].naam),r=prompt("Nayi raqam likho:",khatey[i].raqam);if(n&&r){khatey[i].naam=n;khatey[i].raqam=r;localStorage.setItem('khatey',JSON.stringify(khatey));showKhatey()}}
-function shareKhata(){if(khatey.length==0){alert('Pehle khata add karo');return}let t='*SIKANDER HAYAT - KHATA LIST*%0A%0A',s=0;khatey.forEach(k=>{t+=`${k.naam}: Rs ${k.raqam} - ${k.tareekh}%0A`;s+=Number(k.raqam)});t+=`%0A*Total: Rs ${s}*%0A%0AContact: 0314-5587856`;window.open(`https://wa.me/?text=${t}`,'_blank')}
-showKhatey();
+let k=JSON.parse(localStorage.getItem('k'))||[];
+setInterval(()=>{document.getElementById('time').innerText=new Date().toLocaleString()},1000);
+navigator.getBattery().then(b=>{let u=()=>document.getElementById('bat').innerText=Math.round(b.level*100);u();b.addEventListener('levelchange',u)});
+function show(){let l=document.getElementById('list'),t=0;l.innerHTML='';k.forEach((x,i)=>{l.innerHTML+=`<p><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">Date: ${x.d}</small><button onclick="del(${i})" style="float:right;background:red;color:#fff;border:none">X</button><button onclick="edit(${i})" style="float:right;background:orange;color:#fff;border:none;margin-right:5px">EDIT</button></p>`;t+=Number(x.r)});document.getElementById('t').innerText=t}
+function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,d=new Date().toLocaleDateString('en-GB');if(n&&r){k.push({n,r,d});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';show()}else alert('Naam aur Raqam likho')}
+function del(i){k.splice(i,1);localStorage.setItem('k',JSON.stringify(k));show()}
+function edit(i){let n=prompt("Naya naam:",k[i].n),r=prompt("Nayi raqam:",k[i].r);if(n&&r){k[i].n=n;k[i].r=r;localStorage.setItem('k',JSON.stringify(k));show()}}
+function share(){if(k.length==0)return alert('Pehle khata add karo');let x='*SIKANDER HAYAT - KHATA LIST*%0A%0A',s=0;k.forEach(y=>{x+=`${y.n}: Rs ${y.r} - ${y.d}%0A`;s+=Number(y.r)});x+=`%0A*Total: Rs ${s}*%0A%0AContact: 0314-5587856`;window.open(`https://wa.me/?text=${x}`)}
+show();
 </script>
 </body>
 </html>
