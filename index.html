@@ -46,4 +46,106 @@
 
   <h1>⚡ SIKANDER HAYAT</h1>
   <p style="color:#0ff" id="datetime"></p>
-  <p style="color:#0
+  <p style="color:#0f0">Battery: <span id="battery">--</span>%</p>
+  <h3 style="color:#f00">Apna Kaam Apni Marzi</h3>
+  <h3 style="color:#0f0">ONLINE MODE ACTIVE</h3>
+  <p>📞 0314-5587856</p>
+
+  <input id="naam" placeholder="Client Ka Naam">
+  <input id="raqam" type="number" placeholder="Raqam">
+  <button onclick="addKhata()">+ ADD KHATA</button>
+
+  <div id="khataList" style="margin-top:15px;"></div>
+  <h3 style="color:#00ff88;">Total: Rs <span id="total">0</span></h3>
+  
+  <button onclick="shareKhata()" style="background:#25D366;color:#fff;">📲 WhatsApp Pe Share Karo</button>
+
+  <p style="color:#555;margin-top:30px;">Made in Risalpur Cantt | Pakistan</p>
+
+<script>
+  let khatey = JSON.parse(localStorage.getItem('khatey')) || [];
+
+  function updateDateTime() {
+    document.getElementById('datetime').innerText = new Date().toLocaleString('en-GB');
+  }
+  setInterval(updateDateTime, 1000);
+  updateDateTime();
+
+  navigator.getBattery().then(function(battery) {
+    function updateBattery() {
+      document.getElementById('battery').innerText = Math.round(battery.level * 100);
+    }
+    updateBattery();
+    battery.addEventListener('levelchange', updateBattery);
+  });
+
+  function showKhatey() {
+    let list = document.getElementById('khataList');
+    let total = 0;
+    list.innerHTML = '';
+    khatey.forEach((k, i) => {
+      list.innerHTML += `<p style="color:#fff;border-bottom:1px solid #00ff88;padding:10px;">
+        <b>${k.naam}</b>: Rs ${k.raqam} <br>
+        <small style="color:#888;">Date: ${k.tareekh || 'N/A'}</small>
+        <button onclick="deleteKhata(${i})" style="float:right;background:red;color:white;border:none;padding:5px 10px;border-radius:3px;">X</button>
+        <button onclick="editKhata(${i})" style="float:right;background:orange;color:white;border:none;padding:5px 10px;border-radius:3px;margin-right:5px;">EDIT</button>
+      </p>`;
+      total += Number(k.raqam);
+    });
+    document.getElementById('total').innerText = total;
+  }
+
+  function addKhata() {
+    let naam = document.getElementById('naam').value;
+    let raqam = document.getElementById('raqam').value;
+    let tareekh = new Date().toLocaleDateString('en-GB');
+    
+    if(naam && raqam) {
+      khatey.push({naam, raqam, tareekh});
+      localStorage.setItem('khatey', JSON.stringify(khatey));
+      document.getElementById('naam').value = '';
+      document.getElementById('raqam').value = '';
+      showKhatey();
+    } else {
+      alert('Naam aur Raqam dono likho');
+    }
+  }
+
+  function deleteKhata(index) {
+    khatey.splice(index, 1);
+    localStorage.setItem('khatey', JSON.stringify(khatey));
+    showKhatey();
+  }
+
+  function editKhata(index) {
+    let nayaNaam = prompt("Naya naam likho:", khatey[index].naam);
+    let nayiRaqam = prompt("Nayi raqam likho:", khatey[index].raqam);
+    
+    if(nayaNaam && nayiRaqam) {
+      khatey[index].naam = nayaNaam;
+      khatey[index].raqam = nayiRaqam;
+      localStorage.setItem('khatey', JSON.stringify(khatey));
+      showKhatey();
+    }
+  }
+
+  function shareKhata() {
+    if(khatey.length === 0) {
+      alert('Pehle khata add karo');
+      return;
+    }
+    let text = '*SIKANDER HAYAT - KHATA LIST*%0A%0A';
+    let total = 0;
+    khatey.forEach(k => {
+      text += `${k.naam}: Rs ${k.raqam} - ${k.tareekh}%0A`;
+      total += Number(k.raqam);
+    });
+    text += `%0A*Total: Rs ${total}*%0A%0AContact: 0314-5587856`;
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  }
+
+  showKhatey();
+</script>
+
+</body>
+</html>
