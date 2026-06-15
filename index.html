@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HexaBolt-20 | SIKANDER HAYAT</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: #00ff88; 
+            font-family: 'Courier New', monospace; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            border: 2px solid #00ff88;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px #00ff8855;
+            max-width: 90%;
+        }
+        h1 { 
+            font-size: 2.5rem; 
+            margin-bottom: 20px; 
+            text-shadow: 0 0 10px #00ff88;
+        }
+        .name { 
+            font-size: 1.8rem; 
+            color: #fff; 
+            margin: 15px 0; 
+            font-weight: bold;
+        }
+        .time { 
+            font-size: 1.4rem; 
+            margin: 10px 0; 
+            color: #00ccff;
+        }
+        .battery { 
+            font-size: 1.2rem; 
+            margin: 10px 0; 
+        }
+        .quote { 
+            font-size: 1.3rem; 
+            margin: 25px 0; 
+            color: #ff4444; 
+            font-weight: bold;
+        }
+        .status { 
+            font-size: 1.5rem; 
+            margin-top: 20px; 
+            color: #00ff88;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 
+            50% { opacity: 0.3; } 
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ HEXABOLT-20 ⚡</h1>
+        <div class="name">SIKANDER HAYAT</div>
+        <div class="time" id="time">Loading...</div>
+        <div class="battery">Battery: 43%</div>
+        <div class="quote">Google Sheets ko maari goli</div>
+        <div class="status">HEXABOLT MODE ON</div>
+        <div class="footer">Made in Mardan | 15 June 2026</div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('time').innerText = now.toLocaleDateString('en-US', options);
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+  </html>
