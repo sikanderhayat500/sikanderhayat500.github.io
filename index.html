@@ -81,9 +81,19 @@
   <button onclick="addKhata()" style="width:95%;padding:10px;margin:5px;background:#00ff88;color:#000;font-weight:bold;border:none;border-radius:5px;">+ ADD KHATA</button>
   <div id="khataList" style="margin-top:15px;text-align:left;"></div>
   <h3 style="color:#00ff88;">Total: Rs <span id="total">0</span></h3>
-</div>
-<button onclick="shareKhata()" style="width:95%;padding:10px;margin:5px;background:#25D366;color:#fff;font-weight:bold;border:none;border-radius:5px;">📤 WhatsApp Pe Share Karo</button>
-
+</div><button onclick="editKhata(${i})" style="float:right;background:orange;color:white;border:none;margin-left:5px;">EDIT</button>
+<button onclick="deleteKhata(${i})" style="float:right;background:red;color:white;border:none;">X</button>
+function editKhata(index) {
+  let nayaNaam = prompt("Naya naam likho:", khatey[index].naam);
+  let nayiRaqam = prompt("Nayi raqam likho:", khatey[index].raqam);
+  
+  if(nayaNaam && nayiRaqam) {
+    khatey[index].naam = nayaNaam;
+    khatey[index].raqam = nayiRaqam;
+    localStorage.setItem('khatey', JSON.stringify(khatey));
+    showKhatey();
+  }
+}
 <script>
 function shareKhata() {
   if(khatey.length === 0) {
