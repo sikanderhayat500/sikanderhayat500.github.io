@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tally Tracker Pro Max - Sikander Hayat</title>
+<title>Tally Tracker Ultimate - Sikander Hayat</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 body{background:#000;color:#00ff88;font-family:monospace;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px}
@@ -29,11 +29,12 @@ button{width:95%;padding:10px;margin:8px 0;background:#00ff88;color:#000;border:
 </div>
 
 <div class="card">
-  <h1 style="color:#00ff88">⚡ TALLY PRO MAX ⚡</h1>
+  <h1 style="color:#00ff88">⚡ TALLY ULTIMATE ⚡</h1>
   <h2>SIKANDER HAYAT</h2>
   <p id="time" style="color:#0ff"></p>
   <p style="color:#0f0">Battery: <span id="bat">--</span>%</p>
   <button onclick="lockApp()" style="background:#f00;color:#fff;padding:5px">🔒 LOCK APP</button>
+  <button onclick="changePass()" style="background:#00f;color:#fff;padding:5px">🔑 CHANGE PASSWORD</button>
   
   <input id="search" class="search" placeholder="🔍 Naam se search karo..." oninput="searchKhata()">
   
@@ -48,10 +49,12 @@ button{width:95%;padding:10px;margin:8px 0;background:#00ff88;color:#000;border:
   <button onclick="add()">+ ADD KHATA</button>
   
   <div id="list" style="margin-top:15px"></div>
-  <h3>Total: Rs <span id="t">0</span> | Paid: Rs <span id="tp">0</span></h3>
+  <h3>Total: Rs <span id="t">0</span><br>Paid: Rs <span id="tp">0</span><br>Baqi: Rs <span id="tb" style="color:#f00">0</span></h3>
   
   <button onclick="share()" style="background:#25D366;color:#fff">📲 WhatsApp Share</button>
   <button onclick="downloadPDF()" style="background:#f40;color:#fff">📄 PDF Download</button>
+  <button onclick="backup()" style="background:#08f;color:#fff">💾 BACKUP DATA</button>
+  <button onclick="restore()" style="background:#f0f;color:#fff">📥 RESTORE DATA</button>
   <p style="color:#555;margin-top:20px;font-size:12px">Made in Risalpur Cantt | Pakistan</p>
 </div>
 
@@ -66,27 +69,29 @@ else document.getElementById('lockScreen').style.display='none';
 
 function unlock(){if(document.getElementById('pass').value===pass){document.getElementById('lockScreen').style.display='none';localStorage.setItem('locked','false')}else alert('Ghalat Password!')}
 function lockApp(){document.getElementById('lockScreen').style.display='flex';localStorage.setItem('locked','true');document.getElementById('pass').value=''}
+function changePass(){let old=prompt("Purana password daalo:"),new1=prompt("Naya password daalo:"),new2=prompt("Naya password dobara daalo:");if(old===pass&&new1===new2&&new1){pass=new1;localStorage.setItem('pass',pass);alert('Password change ho gaya!')}else alert('Ghalat! Password nahi badla')}
 
 setInterval(()=>{document.getElementById('time').innerText=new Date().toLocaleString('en-GB',{dateStyle:'full',timeStyle:'medium'})},1000);
 navigator.getBattery().then(b=>{let u=()=>document.getElementById('bat').innerText=Math.round(b.level*100);u();b.addEventListener('levelchange',u)});
 
-function show(list=filterK){let l=document.getElementById('list'),t=0,tp=0;l.innerHTML='';list.forEach((x)=>{let i=k.indexOf(x);let status=x.p?'paid':'unpaid';l.innerHTML+=`<div class="item ${status}"><span class="tag" style="background:${x.p?'#0a0':'#a00'}">${x.p?'PAID':'UNPAID'}</span><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">Date: ${x.d}</small><br><button onclick="togglePaid(${i})" style="background:${x.p?'orange':'green'};color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">${x.p?'UNPAID KARO':'PAID KARO'}</button><button onclick="edit(${i})" style="background:orange;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">EDIT</button><button onclick="del(${i})" style="background:red;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 0 0 0">X</button></div>`;t+=Number(x.r);if(x.p)tp+=Number(x.r)});document.getElementById('t').innerText=t;document.getElementById('tp').innerText=tp}
+function show(list=filterK){let l=document.getElementById('list'),t=0,tp=0;l.innerHTML='';list.forEach((x)=>{let i=k.indexOf(x);let status=x.p?'paid':'unpaid';l.innerHTML+=`<div class="item ${status}"><span class="tag" style="background:${x.p?'#0a0':'#a00'}">${x.p?'PAID':'UNPAID'}</span><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">Date: ${x.d}</small><br><button onclick="togglePaid(${i})" style="background:${x.p?'orange':'green'};color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">${x.p?'UNPAID KARO':'PAID KARO'}</button><button onclick="edit(${i})" style="background:orange;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">EDIT</button><button onclick="del(${i})" style="background:red;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 0 0 0">X</button></div>`;t+=Number(x.r);if(x.p)tp+=Number(x.r)});document.getElementById('t').innerText=t;document.getElementById('tp').innerText=tp;document.getElementById('tb').innerText=t-tp}
 
 function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,d=new Date().toLocaleDateString('en-GB');if(n&&r){k.push({n,r,d,p:false});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';document.getElementById('search').value='';filterType(currentFilter)}else alert('Naam aur Raqam likho')}
-
 function del(i){k.splice(i,1);localStorage.setItem('k',JSON.stringify(k));filterType(currentFilter)}
 function edit(i){let n=prompt("Naya naam:",k[i].n),r=prompt("Nayi raqam:",k[i].r);if(n&&r){k[i].n=n;k[i].r=r;localStorage.setItem('k',JSON.stringify(k));filterType(currentFilter)}}
 function togglePaid(i){k[i].p=!k[i].p;localStorage.setItem('k',JSON.stringify(k));filterType(currentFilter)}
 
 function searchKhata(){let s=document.getElementById('search').value.toLowerCase();filterK=k.filter(x=>x.n.toLowerCase().includes(s));if(currentFilter==='paid')filterK=filterK.filter(x=>x.p);if(currentFilter==='unpaid')filterK=filterK.filter(x=>!x.p);show(filterK)}
-
 function filterType(type){currentFilter=type;if(type==='all')filterK=k;else if(type==='paid')filterK=k.filter(x=>x.p);else filterK=k.filter(x=>!x.p);searchKhata()}
 
 function share(){if(k.length==0)return alert('Pehle khata add karo');let x='*SIKANDER HAYAT - KHATA LIST*%0A%0A',s=0,p=0;k.forEach(y=>{x+=`${y.p?'✅':'❌'} ${y.n}: Rs ${y.r} - ${y.d}%0A`;s+=Number(y.r);if(y.p)p+=Number(y.r)});x+=`%0A*Total: Rs ${s} | Paid: Rs ${p} | Baqi: Rs ${s-p}*%0A%0AContact: 0314-5587856`;window.open(`https://wa.me/?text=${x}`)}
 
 function downloadPDF(){if(k.length==0)return alert('Pehle khata add karo');const {jsPDF}=window.jspdf;const doc=new jsPDF();doc.setFontSize(18);doc.text("SIKANDER HAYAT - KHATA LIST",20,20);doc.setFontSize(12);let y=40,s=0,p=0;k.forEach((x,i)=>{doc.text(`${i+1}. ${x.p?'[PAID]':'[UNPAID]'} ${x.n}: Rs ${x.r} - ${x.d}`,20,y);y+=10;s+=Number(x.r);if(x.p)p+=Number(x.r);if(y>270){doc.addPage();y=20}});doc.setFontSize(14);doc.text(`Total: Rs ${s} | Paid: Rs ${p} | Baqi: Rs ${s-p}`,20,y+10);doc.text(`Contact: 0314-5587856`,20,y+20);doc.save(`Khata_${new Date().toLocaleDateString('en-GB').replace(/\//g,'-')}.pdf`)}
 
+function backup(){let data=JSON.stringify(k);navigator.clipboard.writeText(data);alert('Backup copy ho gaya! Is ko kisi note me paste karke save kar lo. Mobile gum ho jaye to RESTORE se wapis aa jayega')}
+function restore(){let data=prompt("Backup wala data yahan paste karo:");if(data){try{k=JSON.parse(data);localStorage.setItem('k',JSON.stringify(k));filterType('all');alert('Data wapis aa gaya!')}catch(e){alert('Ghalat data!')}}}
+
 show();
 </script>
 </body>
-  </html>
+</html>
