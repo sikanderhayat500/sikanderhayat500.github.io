@@ -1,98 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tally Tracker</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background: #0a0a0a;
-            color: #00ff88;
-            font-family: 'Courier New', monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            border: 2px solid #00ff88;
-            border-radius: 20px;
-            padding: 30px 40px;
-            text-align: center;
-            box-shadow: 0 0 30px #00ff8855;
-            max-width: 400px;
-            width: 100%;
-        }
-        h1 {
-            font-size: 28px;
-            margin-bottom: 15px;
-            text-shadow: 0 0 10px #00ff88;
-        }
-        .name {
-            font-size: 20px;
-            color: #ffffff;
-            margin-bottom: 15px;
-        }
-        .time {
-            font-size: 16px;
-            color: #00ccff;
-            margin-bottom: 10px;
-        }
-        .battery {
-            font-size: 16px;
-            color: #00ff88;
-            margin-bottom: 15px;
-        }
-        .quote {
-            font-size: 16px;
-            color: #ff4444;
-            margin: 20px 0;
-        }
-        .status {
-            font-size: 16px;
-            color: #00ff88;
-            margin-bottom: 20px;
-        }
-        .footer {
-            font-size: 12px;
-            color: #888888;
-            margin-top: 20px;
-        }
-    </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tally Tracker - Sikander Hayat</title>
+<style>
+body{background:#000;color:#00ff88;font-family:monospace;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px}
+.card{border:2px solid #00ff88;border-radius:15px;padding:20px;width:90%;max-width:400px;box-shadow:0 0 20px #00ff88;text-align:center}
+input{width:90%;padding:10px;margin:8px 0;background:#111;border:1px solid #00ff88;color:#fff;border-radius:5px}
+button{width:95%;padding:10px;margin:8px 0;background:#00ff88;color:#000;border:none;border-radius:5px;font-weight:bold;cursor:pointer}
+.item{text-align:left;background:#111;padding:8px;margin:5px 0;border-radius:5px;border-left:3px solid #00ff88}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>⚡ TALLY TRACKER ⚡</h1>
-        <div class="name">SIKANDER HAYAT</div>
-        <div class="time" id="time">Loading...</div>
-        <div class="battery">Battery: 43%</div>
-        <div class="quote">Apna Kaam Apni Marzi</div>
-        <div class="status">ONLINE MODE ACTIVE</div>
-        <div class="footer">Made in Risalpur Cantt | Pakistan</div>
-    </div>
+<div class="card">
+  <h1 style="color:#00ff88">⚡ TALLY TRACKER ⚡</h1>
+  <h2>SIKANDER HAYAT</h2>
+  <p id="time" style="color:#0ff"></p>
+  <p style="color:#0f0">Battery: <span id="bat">--</span>%</p>
+  <p style="color:#f00">Apna Kaam Apni Marzi</p>
+  <p style="color:#0f0">ONLINE MODE ACTIVE</p>
+  
+  <input id="n" placeholder="Client Ka Naam">
+  <input id="r" type="number" placeholder="Raqam">
+  <button onclick="add()">+ ADD KHATA</button>
+  
+  <div id="list" style="margin-top:15px"></div>
+  <h3>Total: Rs <span id="t">0</span></h3>
+  
+  <button onclick="share()" style="background:#25D366;color:#fff">📲 WhatsApp Share</button>
+  <p style="color:#555;margin-top:20px;font-size:12px">Made in Risalpur Cantt | Pakistan</p>
+</div>
 
-    <script>
-        function updateTime() {
-            const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            };
-            document.getElementById('time').textContent = now.toLocaleDateString('en-US', options);
-        }
-        updateTime();
-        setInterval(updateTime, 1000);
-    </script>
+<script>
+let k=JSON.parse(localStorage.getItem('k'))||[];
+setInterval(()=>{document.getElementById('time').innerText=new Date().toLocaleString('en-GB',{dateStyle:'full',timeStyle:'medium'})},1000);
+navigator.getBattery().then(b=>{let u=()=>document.getElementById('bat').innerText=Math.round(b.level*100);u();b.addEventListener('levelchange',u)});
+function show(){let l=document.getElementById('list'),t=0;l.innerHTML='';k.forEach((x,i)=>{l.innerHTML+=`<div class="item"><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">Date: ${x.d}</small><button onclick="del(${i})" style="float:right;background:red;color:#fff;border:none;padding:3px 8px;border-radius:3px">X</button><button onclick="edit(${i})" style="float:right;background:orange;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin-right:5px">EDIT</button></div>`;t+=Number(x.r)});document.getElementById('t').innerText=t}
+function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,d=new Date().toLocaleDateString('en-GB');if(n&&r){k.push({n,r,d});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';show()}else alert('Naam aur Raqam likho')}
+function del(i){k.splice(i,1);localStorage.setItem('k',JSON.stringify(k));show()}
+function edit(i){let n=prompt("Naya naam:",k[i].n),r=prompt("Nayi raqam:",k[i].r);if(n&&r){k[i].n=n;k[i].r=r;localStorage.setItem('k',JSON.stringify(k));show()}}
+function share(){if(k.length==0)return alert('Pehle khata add karo');let x='*SIKANDER HAYAT - KHATA LIST*%0A%0A',s=0;k.forEach(y=>{x+=`${y.n}: Rs ${y.r} - ${y.d}%0A`;s+=Number(y.r)});x+=`%0A*Total: Rs ${s}*%0A%0AContact: 0314-5587856`;window.open(`https://wa.me/?text=${x}`)}
+show();
+</script>
 </body>
 </html>
