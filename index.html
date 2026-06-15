@@ -106,4 +106,19 @@ async function toggleRecord(){
   }
 }
 
-function show(){let l=document.getElementById('list'),t=0,tp=0;l.innerHTML='';k.forEach((x,i)=>{let status=x.p?'paid':'unpaid';let overdue=!x.p&&isOverdue(x.due);if(overdue)status+=' overdue';let photo=x.photo?`<img src="${x.photo}" class="avatar">`:`<div class="avatar" style="background:#333;display:flex;align-items:center;justify-content:center">👤</div>`;
+function show(){let l=document.getElementById('list'),t=0,tp=0;l.innerHTML='';k.forEach((x,i)=>{let status=x.p?'paid':'unpaid';let overdue=!x.p&&isOverdue(x.due);if(overdue)status+=' overdue';let photo=x.photo?`<img src="${x.photo}" class="avatar">`:`<div class="avatar" style="background:#333;display:flex;align-items:center;justify-content:center">👤</div>`;let voiceBtn=x.audio?`<button onclick="playVoice(${i})" style="background:#0ff;color:#000;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">▶️ PLAY</button>`:'';let callBtn=x.m?`<a href="tel:${x.m}" style="text-decoration:none"><button style="background:#0f0;color:#000;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">📞 CALL</button></a>`:'';l.innerHTML+=`<div class="item ${status}">${photo}<div style="flex:1"><span class="tag" style="background:${x.p?'#0a0':overdue?'#f40':'#a00'}">${x.p?'PAID':overdue?'OVERDUE':'UNPAID'}</span><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">📱 ${x.m||'No Num'} | Due: ${x.due||'N/A'}</small><br>${voiceBtn}${callBtn}<button onclick="togglePaid(${i})" style="background:${x.p?'orange':'green'};color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">${x.p?'UNPAID':'PAID'}</button>${x.m?`<button onclick="sendSMS(${i})" style="background:#0ff;color:#000;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">📲 SMS</button>`:''}<button onclick="del(${i})" style="background:red;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 0 0 0">X</button></div></div>`;t+=Number(x.r);if(x.p)tp+=Number(x.r)});document.getElementById('t').innerText=t;document.getElementById('tp').innerText=tp;document.getElementById('tb').innerText=t-tp}
+
+function playVoice(i){let audio=new Audio(k[i].audio);audio.play()}
+
+async function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,m=document.getElementById('m').value,due=document.getElementById('due').value;let photoFile=document.getElementById('photo').files[0];let photo='';if(photoFile){photo=await toBase64(photoFile)}if(n&&r&&m){k.push({n,r,m,due,photo,audio:tempAudio,p:false});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';document.getElementById('m').value='';document.getElementById('due').value='';document.getElementById('photo').value='';document.getElementById('photoName').innerText='';document.getElementById('recStatus').innerText='';tempAudio=null;show()}else alert('Naam, Raqam aur Mobile zaroori hai CALL button ke liye')}
+
+function toBase64(file){return new Promise((res,rej)=>{let r=new FileReader();r.readAsDataURL(file);r.onload=()=>res(r.result);r.onerror=e=>rej(e)})}
+function del(i){k.splice(i,1);localStorage.setItem('k',JSON.stringify(k));show()}
+function togglePaid(i){k[i].p=!k[i].p;localStorage.setItem('k',JSON.stringify(k));show()}
+function sendSMS(i){let x=k[i];let msg=`Assalam o Alaikum ${x.n} bhai,%0ARs ${x.r} baqi hai.%0ASikander Hayat`;window.open(`sms:${x.m}?body=${msg}`)}
+function share(){let x='*SIKANDER HAYAT - KHATA*%0A%0A',s=0,p=0;k.forEach(y=>{x+=`${y.p?'✅':'❌'} ${y.n}: Rs ${y.r}%0A`;s+=Number(y.r);if(y.p)p+=Number(y.r)});x+=`%0A*Total: Rs ${s} | Baqi: Rs ${s-p}*`;window.open(`https://wa.me/?text=${x}`)}
+
+show();
+</script>
+</body>
+</html>
