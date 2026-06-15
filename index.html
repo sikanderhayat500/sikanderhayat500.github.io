@@ -2,61 +2,15 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tally Tracker Pro - Sikander Hayat</title>
+<title>Tally Tracker Pro Max - Sikander Hayat</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 body{background:#000;color:#00ff88;font-family:monospace;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px}
 .card{border:2px solid #00ff88;border-radius:15px;padding:20px;width:90%;max-width:400px;box-shadow:0 0 20px #00ff88;text-align:center}
 input{width:90%;padding:10px;margin:8px 0;background:#111;border:1px solid #00ff88;color:#fff;border-radius:5px}
 button{width:95%;padding:10px;margin:8px 0;background:#00ff88;color:#000;border:none;border-radius:5px;font-weight:bold;cursor:pointer}
-.item{text-align:left;background:#111;padding:8px;margin:5px 0;border-radius:5px;border-left:3px solid #00ff88}
+.item{text-align:left;background:#111;padding:8px;margin:5px 0;border-radius:5px;border-left:3px solid #00ff88;position:relative}
 .search{background:#001a0d;border:2px solid #0f0}
-</style>
-</head>
-<body>
-<div class="card">
-  <h1 style="color:#00ff88">⚡ TALLY TRACKER PRO ⚡</h1>
-  <h2>SIKANDER HAYAT</h2>
-  <p id="time" style="color:#0ff"></p>
-  <p style="color:#0f0">Battery: <span id="bat">--</span>%</p>
-  <p style="color:#f00">Apna Kaam Apni Marzi</p>
-  <p style="color:#0f0">ONLINE MODE ACTIVE</p>
-  
-  <input id="search" class="search" placeholder="🔍 Naam se search karo..." oninput="searchKhata()">
-  
-  <input id="n" placeholder="Client Ka Naam">
-  <input id="r" type="number" placeholder="Raqam">
-  <button onclick="add()">+ ADD KHATA</button>
-  
-  <div id="list" style="margin-top:15px"></div>
-  <h3>Total: Rs <span id="t">0</span></h3>
-  
-  <button onclick="share()" style="background:#25D366;color:#fff">📲 WhatsApp Share</button>
-  <button onclick="downloadPDF()" style="background:#f40;color:#fff">📄 PDF Download</button>
-  <p style="color:#555;margin-top:20px;font-size:12px">Made in Risalpur Cantt | Pakistan</p>
-</div>
-
-<script>
-let k=JSON.parse(localStorage.getItem('k'))||[];
-let filterK=k;
-setInterval(()=>{document.getElementById('time').innerText=new Date().toLocaleString('en-GB',{dateStyle:'full',timeStyle:'medium'})},1000);
-navigator.getBattery().then(b=>{let u=()=>document.getElementById('bat').innerText=Math.round(b.level*100);u();b.addEventListener('levelchange',u)});
-
-function show(list=k){let l=document.getElementById('list'),t=0;l.innerHTML='';list.forEach((x,i)=>{let realIndex=k.indexOf(x);l.innerHTML+=`<div class="item"><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">Date: ${x.d}</small><button onclick="del(${realIndex})" style="float:right;background:red;color:#fff;border:none;padding:3px 8px;border-radius:3px">X</button><button onclick="edit(${realIndex})" style="float:right;background:orange;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin-right:5px">EDIT</button></div>`;t+=Number(x.r)});document.getElementById('t').innerText=t}
-
-function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,d=new Date().toLocaleDateString('en-GB');if(n&&r){k.push({n,r,d});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';document.getElementById('search').value='';filterK=k;show()}else alert('Naam aur Raqam likho')}
-
-function del(i){k.splice(i,1);localStorage.setItem('k',JSON.stringify(k));searchKhata()}
-
-function edit(i){let n=prompt("Naya naam:",k[i].n),r=prompt("Nayi raqam:",k[i].r);if(n&&r){k[i].n=n;k[i].r=r;localStorage.setItem('k',JSON.stringify(k));searchKhata()}}
-
-function searchKhata(){let s=document.getElementById('search').value.toLowerCase();filterK=s?k.filter(x=>x.n.toLowerCase().includes(s)):k;show(filterK)}
-
-function share(){if(k.length==0)return alert('Pehle khata add karo');let x='*SIKANDER HAYAT - KHATA LIST*%0A%0A',s=0;k.forEach(y=>{x+=`${y.n}: Rs ${y.r} - ${y.d}%0A`;s+=Number(y.r)});x+=`%0A*Total: Rs ${s}*%0A%0AContact: 0314-5587856`;window.open(`https://wa.me/?text=${x}`)}
-
-function downloadPDF(){if(k.length==0)return alert('Pehle khata add karo');const {jsPDF}=window.jspdf;const doc=new jsPDF();doc.setFontSize(18);doc.text("SIKANDER HAYAT - KHATA LIST",20,20);doc.setFontSize(12);let y=40,s=0;k.forEach((x,i)=>{doc.text(`${i+1}. ${x.n}: Rs ${x.r} - ${x.d}`,20,y);y+=10;s+=Number(x.r);if(y>270){doc.addPage();y=20}});doc.setFontSize(14);doc.text(`Total: Rs ${s}`,20,y+10);doc.text(`Contact: 0314-5587856`,20,y+20);doc.save(`Khata_${new Date().toLocaleDateString('en-GB').replace(/\//g,'-')}.pdf`)}
-
-show();
-</script>
-</body>
-</html>
+.paid{background:#0f02;border-left:3px solid #0f0}
+.unpaid{background:#f002;border-left:3px solid #f00}
+.tag{
