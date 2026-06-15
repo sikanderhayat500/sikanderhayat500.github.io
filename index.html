@@ -2,59 +2,41 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tally Call Fix - Sikander Hayat</title>
+<title>Tally NO LOCK - Sikander Hayat</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{background:#000;color:#00ff88;font-family:monospace;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px}
 .card{border:2px solid #00ff88;border-radius:15px;padding:20px;width:90%;max-width:400px;box-shadow:0 0 20px #00ff88;text-align:center}
 input{width:90%;padding:10px;margin:8px 0;background:#111;border:1px solid #00ff88;color:#fff;border-radius:5px}
 button{width:95%;padding:10px;margin:8px 0;background:#00ff88;color:#000;border:none;border-radius:5px;font-weight:bold;cursor:pointer}
 .item{text-align:left;background:#111;padding:8px;margin:5px 0;border-radius:5px;border-left:3px solid #00ff88;position:relative;display:flex;gap:10px}
-.search{background:#001a0d;border:2px solid #0f0}
 .paid{background:#0f02;border-left:3px solid #0f0}
 .unpaid{background:#f002;border-left:3px solid #f00}
 .overdue{background:#f40!important;border:3px solid #f00!important;animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
 .tag{position:absolute;top:5px;right:5px;font-size:10px;padding:2px 6px;border-radius:3px}
-.lock{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999;display:flex;justify-content:center;align-items:center}
-.chartbox{background:#111;padding:10px;border-radius:10px;margin:10px 0}
 .avatar{width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid #00ff88}
 .file-label{display:block;background:#001a0d;border:2px dashed #00ff88;padding:15px;border-radius:5px;margin:8px auto;width:90%;cursor:pointer}
-.recording{background:#f00!important;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 </style>
 </head>
 <body>
-<div id="lockScreen" class="lock">
-  <div class="card" style="max-width:300px">
-    <h2 style="color:#f00">🔒 LOCKED</h2>
-    <input type="password" id="pass" placeholder="Password">
-    <button onclick="unlock()">UNLOCK</button>
-    <p style="color:#555;font-size:11px">Default: 1234</p>
-  </div>
-</div>
-
 <div class="card">
-  <h1 style="color:#00ff88">⚡ TALLY CALL FIX ⚡</h1>
+  <h1 style="color:#00ff88">⚡ TALLY NO LOCK ⚡</h1>
   <h2>SIKANDER HAYAT</h2>
   <p id="time" style="color:#0ff"></p>
   <p style="color:#0f0">Battery: <span id="bat">--</span>%</p>
-  <button onclick="lockApp()" style="background:#f00;color:#fff;padding:5px">🔒 LOCK</button>
 
   <input id="n" placeholder="Client Ka Naam">
   <input id="r" type="number" placeholder="Raqam">
-  <input id="m" type="number" placeholder="Mobile: 0314xxxxxxx - ZAROORI">
+  <input id="m" type="number" placeholder="Mobile: 0314xxxxxxx - CALL KE LIYE ZAROORI">
   <input id="due" type="date">
 
   <label for="photo" class="file-label">📸 PHOTO LAGAO</label>
   <input id="photo" type="file" accept="image/*" style="display:none">
   <p id="photoName" style="color:#0ff;font-size:11px"></p>
 
-  <button id="recBtn" onclick="toggleRecord()">🎙️ VOICE NOTE RECORD</button>
-  <p id="recStatus" style="color:#f00;font-size:11px"></p>
-
   <button onclick="add()">+ ADD KHATA</button>
+  <button onclick="clearAll()" style="background:#f00;color:#fff">🗑️ SAB DELETE KARO</button>
 
   <div id="list" style="margin-top:15px"></div>
   <h3>Total: Rs <span id="t">0</span><br>Paid: Rs <span id="tp">0</span><br>Baqi: Rs <span id="tb" style="color:#f00">0</span></h3>
@@ -63,60 +45,27 @@ button{width:95%;padding:10px;margin:8px 0;background:#00ff88;color:#000;border:
 </div>
 
 <script>
-let pass=localStorage.getItem('pass')||'1234';
 let k=JSON.parse(localStorage.getItem('k'))||[];
-let mediaRecorder,chunks=[],tempAudio=null,isRecording=false;
 
 document.getElementById('photo').addEventListener('change',function(e){
   if(e.target.files[0])document.getElementById('photoName').innerText='✅ Photo: '+e.target.files[0].name
 });
-
-if(localStorage.getItem('locked')!=='false')document.getElementById('lockScreen').style.display='flex';
-else document.getElementById('lockScreen').style.display='none';
-
-function unlock(){if(document.getElementById('pass').value===pass){document.getElementById('lockScreen').style.display='none';localStorage.setItem('locked','false')}else alert('Ghalat Password!')}
-function lockApp(){document.getElementById('lockScreen').style.display='flex';localStorage.setItem('locked','true');document.getElementById('pass').value=''}
 
 setInterval(()=>{document.getElementById('time').innerText=new Date().toLocaleString('en-GB',{timeStyle:'medium'})},1000);
 navigator.getBattery().then(b=>{let u=()=>document.getElementById('bat').innerText=Math.round(b.level*100);u();b.addEventListener('levelchange',u)});
 
 function isOverdue(dueDate){if(!dueDate)return false;return new Date(dueDate)<new Date().setHours(0,0,0,0)}
 
-async function toggleRecord(){
-  if(!isRecording){
-    try{
-      let stream=await navigator.mediaDevices.getUserMedia({audio:true});
-      mediaRecorder=new MediaRecorder(stream);
-      chunks=[];
-      mediaRecorder.ondataavailable=e=>chunks.push(e.data);
-      mediaRecorder.onstop=()=>{
-        let blob=new Blob(chunks,{type:'audio/webm'});
-        let reader=new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend=()=>{tempAudio=reader.result;document.getElementById('recStatus').innerText='✅ Voice saved!';document.getElementById('recBtn').classList.remove('recording')};
-      };
-      mediaRecorder.start();
-      isRecording=true;
-      document.getElementById('recBtn').classList.add('recording');
-      document.getElementById('recStatus').innerText='🔴 Recording... Dobara dabao';
-    }catch(e){alert('Mic permission do')}
-  }else{
-    mediaRecorder.stop();
-    isRecording=false;
-  }
-}
+function show(){let l=document.getElementById('list'),t=0,tp=0;l.innerHTML='';k.forEach((x,i)=>{let status=x.p?'paid':'unpaid';let overdue=!x.p&&isOverdue(x.due);if(overdue)status+=' overdue';let photo=x.photo?`<img src="${x.photo}" class="avatar">`:`<div class="avatar" style="background:#333;display:flex;align-items:center;justify-content:center">👤</div>`;let callBtn=x.m?`<a href="tel:${x.m}"><button style="background:#0f0;color:#000;border:none;padding:5px 10px;border-radius:3px;margin:5px 5px 0 0;font-weight:bold">📞 CALL KARO</button></a>`:'';let smsBtn=x.m?`<button onclick="sendSMS(${i})" style="background:#0ff;color:#000;border:none;padding:5px 10px;border-radius:3px;margin:5px 5px 0 0;font-weight:bold">📲 SMS</button>`:'';l.innerHTML+=`<div class="item ${status}">${photo}<div style="flex:1"><span class="tag" style="background:${x.p?'#0a0':overdue?'#f40':'#a00'}">${x.p?'PAID':overdue?'OVERDUE':'UNPAID'}</span><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">📱 ${x.m||'No Num'} | Due: ${x.due||'N/A'}</small><br>${callBtn}${smsBtn}<button onclick="togglePaid(${i})" style="background:${x.p?'orange':'green'};color:#fff;border:none;padding:5px 10px;border-radius:3px;margin:5px 5px 0 0">${x.p?'UNPAID':'PAID'}</button><button onclick="del(${i})" style="background:red;color:#fff;border:none;padding:5px 10px;border-radius:3px;margin:5px 0 0 0">X DELETE</button></div></div>`;t+=Number(x.r);if(x.p)tp+=Number(x.r)});document.getElementById('t').innerText=t;document.getElementById('tp').innerText=tp;document.getElementById('tb').innerText=t-tp}
 
-function show(){let l=document.getElementById('list'),t=0,tp=0;l.innerHTML='';k.forEach((x,i)=>{let status=x.p?'paid':'unpaid';let overdue=!x.p&&isOverdue(x.due);if(overdue)status+=' overdue';let photo=x.photo?`<img src="${x.photo}" class="avatar">`:`<div class="avatar" style="background:#333;display:flex;align-items:center;justify-content:center">👤</div>`;let voiceBtn=x.audio?`<button onclick="playVoice(${i})" style="background:#0ff;color:#000;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">▶️ PLAY</button>`:'';let callBtn=x.m?`<a href="tel:${x.m}" style="text-decoration:none"><button style="background:#0f0;color:#000;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">📞 CALL</button></a>`:'';l.innerHTML+=`<div class="item ${status}">${photo}<div style="flex:1"><span class="tag" style="background:${x.p?'#0a0':overdue?'#f40':'#a00'}">${x.p?'PAID':overdue?'OVERDUE':'UNPAID'}</span><b>${x.n}</b>: Rs ${x.r}<br><small style="color:#888">📱 ${x.m||'No Num'} | Due: ${x.due||'N/A'}</small><br>${voiceBtn}${callBtn}<button onclick="togglePaid(${i})" style="background:${x.p?'orange':'green'};color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">${x.p?'UNPAID':'PAID'}</button>${x.m?`<button onclick="sendSMS(${i})" style="background:#0ff;color:#000;border:none;padding:3px 8px;border-radius:3px;margin:5px 5px 0 0">📲 SMS</button>`:''}<button onclick="del(${i})" style="background:red;color:#fff;border:none;padding:3px 8px;border-radius:3px;margin:5px 0 0 0">X</button></div></div>`;t+=Number(x.r);if(x.p)tp+=Number(x.r)});document.getElementById('t').innerText=t;document.getElementById('tp').innerText=tp;document.getElementById('tb').innerText=t-tp}
-
-function playVoice(i){let audio=new Audio(k[i].audio);audio.play()}
-
-async function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,m=document.getElementById('m').value,due=document.getElementById('due').value;let photoFile=document.getElementById('photo').files[0];let photo='';if(photoFile){photo=await toBase64(photoFile)}if(n&&r&&m){k.push({n,r,m,due,photo,audio:tempAudio,p:false});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';document.getElementById('m').value='';document.getElementById('due').value='';document.getElementById('photo').value='';document.getElementById('photoName').innerText='';document.getElementById('recStatus').innerText='';tempAudio=null;show()}else alert('Naam, Raqam aur Mobile zaroori hai CALL button ke liye')}
+async function add(){let n=document.getElementById('n').value,r=document.getElementById('r').value,m=document.getElementById('m').value,due=document.getElementById('due').value;let photoFile=document.getElementById('photo').files[0];let photo='';if(photoFile){photo=await toBase64(photoFile)}if(n&&r&&m){k.push({n,r,m,due,photo,p:false});localStorage.setItem('k',JSON.stringify(k));document.getElementById('n').value='';document.getElementById('r').value='';document.getElementById('m').value='';document.getElementById('due').value='';document.getElementById('photo').value='';document.getElementById('photoName').innerText='';show();alert('✅ Khata add ho gaya! CALL button check karo')}else alert('⚠️ Naam, Raqam aur Mobile 3no zaroori hain CALL button ke liye')}
 
 function toBase64(file){return new Promise((res,rej)=>{let r=new FileReader();r.readAsDataURL(file);r.onload=()=>res(r.result);r.onerror=e=>rej(e)})}
 function del(i){k.splice(i,1);localStorage.setItem('k',JSON.stringify(k));show()}
 function togglePaid(i){k[i].p=!k[i].p;localStorage.setItem('k',JSON.stringify(k));show()}
-function sendSMS(i){let x=k[i];let msg=`Assalam o Alaikum ${x.n} bhai,%0ARs ${x.r} baqi hai.%0ASikander Hayat`;window.open(`sms:${x.m}?body=${msg}`)}
-function share(){let x='*SIKANDER HAYAT - KHATA*%0A%0A',s=0,p=0;k.forEach(y=>{x+=`${y.p?'✅':'❌'} ${y.n}: Rs ${y.r}%0A`;s+=Number(y.r);if(y.p)p+=Number(y.r)});x+=`%0A*Total: Rs ${s} | Baqi: Rs ${s-p}*`;window.open(`https://wa.me/?text=${x}`)}
+function sendSMS(i){let x=k[i];let msg=`Assalam o Alaikum ${x.n} bhai,%0ARs ${x.r} baqi hai. Due: ${x.due||'N/A'}%0ASikander Hayat%0A0314-5587856`;window.open(`sms:${x.m}?body=${msg}`)}
+function share(){let x='*SIKANDER HAYAT - KHATA*%0A%0A',s=0,p=0;k.forEach(y=>{x+=`${y.p?'✅':'❌'} ${y.n}: Rs ${y.r} - ${y.m}%0A`;s+=Number(y.r);if(y.p)p+=Number(y.r)});x+=`%0A*Total: Rs ${s} | Baqi: Rs ${s-p}*`;window.open(`https://wa.me/?text=${x}`)}
+function clearAll(){if(confirm('Saray khatay delete kar dun?')){k=[];localStorage.setItem('k',JSON.stringify(k));show()}}
 
 show();
 </script>
