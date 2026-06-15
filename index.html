@@ -120,8 +120,10 @@ function showKhatey() {
 function addKhata() {
   let naam = document.getElementById('naam').value;
   let raqam = document.getElementById('raqam').value;
+  let tareekh = new Date().toLocaleDateString('en-GB');
+  
   if(naam && raqam) {
-    khatey.push({naam, raqam});
+    khatey.push({naam, raqam, tareekh});
     localStorage.setItem('khatey', JSON.stringify(khatey));
     document.getElementById('naam').value = '';
     document.getElementById('raqam').value = '';
