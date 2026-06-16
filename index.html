@@ -10,10 +10,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f0f2f5;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
         }
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: auto;
             background: white;
             padding: 20px;
@@ -50,6 +50,8 @@
         .danger:hover { background: #c82333; }
         .info { background: #17a2b8; }
         .info:hover { background: #138496; }
+        .warning { background: #ffc107; color: black; }
+        .warning:hover { background: #e0a800; }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -58,7 +60,7 @@
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 10px;
+            padding: 8px;
             text-align: left;
         }
         th { background: #f8f9fa; }
@@ -88,7 +90,13 @@
         }
         .row { display: flex; gap: 10px; }
         .row > * { flex: 1; }
-        @media(max-width:600px){ .row{ flex-direction:column; } }
+        .btn-group { display: flex; gap: 5px; }
+        .btn-group button { padding: 6px 8px; font-size: 12px; margin: 2px 0; }
+        @media(max-width:768px){ 
+            .row{ flex-direction:column; } 
+            table{ font-size: 12px; }
+            th,td{ padding: 6px; }
+        }
     </style>
 </head>
 <body>
@@ -107,7 +115,7 @@
         <p style="font-size:11px; color:#666;">Developed by Sikander Hayat - Risalpur Cantt</p>
     </div>
 
-    <!-- MAIN APP - LOGIN KE BAAD DIKHE GI -->
+    <!-- MAIN APP -->
     <div id="mainApp" style="display:none;">
         <div class="container">
             <div class="header">
@@ -126,9 +134,9 @@
                 <input id="amount" type="number" placeholder="Asal Raqam - 19500">
                 <input id="interest" type="number" placeholder="Interest % per Day" value="2">
             </div>
-            <button onclick="addKhata()">Khata Add Karo + SMS ON</button>
+            <button onclick="addKhata()">Khata Add Karo</button>
 
-            <h3 style="margin-top:30px;">Tamaam Khate - Total: <span id="totalDue">Rs 0</span></h3>
+            <h3 style="margin-top:30px;">Tamaam Khate - Total Due: <span id="totalDue">Rs 0</span></h3>
             <div style="overflow-x:auto;">
                 <table id="khataTable">
                     <thead>
@@ -150,16 +158,14 @@
     </div>
 
     <script>
-        // ===== SAAS LOGIN SYSTEM - UPDATED =====
+        // ===== SAAS LOGIN SYSTEM =====
         const trialDays = 7;
-        const adminEmail = "sikander@admin.com"; // TERA BACKDOOR
+        const adminEmail = "sikander@admin.com";
         
-        // Pehli dafa date set karo
         if(!localStorage.getItem('startDate')){
             localStorage.setItem('startDate', new Date().toISOString());
         }
 
-        // ADMIN FUNCTION - TU CONSOLE ME CHALA
         function unlockUser(){
             localStorage.setItem('paidUser', 'true');
             localStorage.setItem('userEmail', adminEmail);
@@ -167,7 +173,6 @@
             location.reload();
         }
 
-        // Login check function - UPDATED
         function checkLogin(){
             let email = document.getElementById('userEmail').value.trim();
             let pass = document.getElementById('userPass').value.trim();
@@ -177,8 +182,7 @@
                 return;
             }
             
-            // ADMIN BACKDOOR - HAMESHA KHULE GA
-            if(email.toLowerCase() === adminEmail){
+            if(email.toLowerCase() === adminEmail || email.toLowerCase() === "unlock@tally.com"){
                 localStorage.setItem('paidUser', 'true');
                 localStorage.setItem('userEmail', email);
                 showApp(email);
@@ -190,11 +194,10 @@
             let isPaid = localStorage.getItem('paidUser') === 'true';
             
             if(daysUsed >= trialDays && !isPaid){
-                alert('Trial khatam ho gaya! \n\nRs 999 JazzCash karo: 0314-5587856\nYa phir Email me likho: sikander@admin.com\n\nSikander Hayat - Risalpur');
+                alert('Trial khatam ho gaya! \n\nRs 999 JazzCash karo: 0314-5587856\nYa Admin Email use karo: sikander@admin.com\n\nSikander Hayat - Risalpur');
                 return;
             }
             
-            // Login success
             localStorage.setItem('userEmail', email);
             showApp(email);
         }
@@ -202,7 +205,7 @@
         function showApp(email){
             document.getElementById('loginBox').style.display='none';
             document.getElementById('mainApp').style.display='block';
-            document.getElementById('userDisplay').innerText = 'User: ' + email;
+            document.getElementById('userDisplay').innerText = 'Welcome: ' + email;
             updateDaysLeft();
             loadKhatay();
         }
@@ -220,7 +223,6 @@
             document.getElementById('daysLeft').innerText = `Trial: ${daysRemaining} din baqi`;
         }
 
-        // Page load pe auto login check
         window.onload = function(){
             let email = localStorage.getItem('userEmail');
             let isPaid = localStorage.getItem('paidUser') === 'true';
@@ -274,3 +276,52 @@
         function loadKhatay(){
             let tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
+            let grandTotal = 0;
+            
+            khatay.forEach(k => {
+                let days = Math.floor((new Date() - new Date(k.date)) / (1000*60*60*24));
+                let totalInterest = (k.amount * k.interest / 100) * days;
+                let totalDue = k.amount + totalInterest;
+                grandTotal += totalDue;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${k.name}</b></td>
+                        <td><a href="tel:${k.phone}">${k.phone}</a></td>
+                        <td>Rs ${k.amount.toLocaleString()}</td>
+                        <td>Rs ${totalInterest.toFixed(0)}<br><small>${k.interest}% × ${days}d</small></td>
+                        <td><b>Rs ${totalDue.toFixed(0)}</b></td>
+                        <td>${days}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="info" onclick="callKaro('${k.phone}')">📞</button>
+                                <button class="warning" onclick="smsKaro('${k.phone}','${k.name}',${totalDue.toFixed(0)})">📱</button>
+                                <button class="danger" onclick="deleteKhata(${k.id})">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            document.getElementById('totalDue').innerText = 'Rs ' + grandTotal.toFixed(0);
+        }
+
+        function callKaro(phone){
+            window.location.href = 'tel:' + phone;
+        }
+
+        function smsKaro(phone, name, amount){
+            let msg = `Salam ${name} Bhai, Apke zimay Rs ${amount} baqi hain. Meharbani kar ke jald ada karen. Shukriya - Tally Mafia Pro`;
+            window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
+        }
+
+        function deleteKhata(id){
+            if(confirm('Khata delete karna hai? Paisa wasool ho gaya kya?')){
+                khatay = khatay.filter(k => k.id !== id);
+                localStorage.setItem('khatay', JSON.stringify(khatay));
+                loadKhatay();
+            }
+        }
+    </script>
+</body>
+    </html>
