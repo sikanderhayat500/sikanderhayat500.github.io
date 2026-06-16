@@ -57,6 +57,16 @@
         .btn-primary:hover {
             background: #218838;
         }
+        .btn-pdf {
+            background: #6f42c1;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-pdf:hover {
+            background: #5a32a3;
+        }
         .khata-item {
             background: #f9f9f9;
             padding: 15px;
@@ -86,6 +96,7 @@
         <input type="text" id="name" placeholder="Customer Ka Naam">
         <input type="number" id="amount" placeholder="Udhaar Ki Raqam">
         <button class="btn-primary" onclick="addKhata()">Khata Add Karo</button>
+        <button class="btn-pdf" onclick="downloadPDF()">PDF Download Karo</button>
         
         <div id="khataList"></div>
     </div>
@@ -167,6 +178,38 @@
         function sendWhatsApp(name, amount) {
             const msg = `Salam ${name} bhai, apke zimme Rs ${amount.toLocaleString()} udhaar hai. Meherbani kar ke wapis kar dein. - Tally Mafia Pro`;
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function downloadPDF() {
+            if(khataList.length === 0) {
+                alert('Pehle koi khata add karo bhai');
+                return;
+            }
+            
+            let pdfContent = `TALLY MAFIA PRO - UDHAR LIST\n`;
+            pdfContent += `==================================\n`;
+            pdfContent += `Date: ${new Date().toLocaleDateString()}\n`;
+            pdfContent += `Total Udhaar: Rs ${khataList.reduce((sum, k) => sum + k.amount, 0).toLocaleString()}\n`;
+            pdfContent += `Total Customers: ${khataList.length}\n`;
+            pdfContent += `==================================\n\n`;
+
+            khataList.forEach((khata, index) => {
+                pdfContent += `${index+1}. Name: ${khata.name}\n`;
+                pdfContent += `   Amount: Rs ${khata.amount.toLocaleString()}\n`;
+                pdfContent += `   Date: ${khata.date}\n`;
+                pdfContent += `   -------------------------\n`;
+            });
+
+            pdfContent += `\n==================================\n`;
+            pdfContent += `Powered by Tally Mafia Pro\n`;
+            pdfContent += `Contact: 03XX-XXXXXXX\n`;
+
+            const blob = new Blob([pdfContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `TallyMafia_Udhaar_${new Date().toLocaleDateString().replace(/\//g,'-')}.txt`;
+            a.click();
         }
     </script>
 </body>
