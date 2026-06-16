@@ -22,13 +22,22 @@
         h1 {
             text-align: center;
             color: #28a745;
+            margin-bottom: 5px;
         }
         #totalAmount {
             color: #28a745;
             text-align: center;
-            margin: 10px;
+            margin: 10px 0;
             font-size: 24px;
             font-weight: bold;
+        }
+        #searchBox {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #28a745;
+            border-radius: 5px;
+            box-sizing: border-box;
         }
         input, button {
             width: 100%;
@@ -58,15 +67,21 @@
         .btn-group button {
             width: 48%;
             margin: 5px 1%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
         .btn-whatsapp { background: #25D366; color: white; }
-        .btn-call { background: #007bff; color: white; }
+        .btn-delete { background: #dc3545; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Tally Mafia Pro</h1>
         <h2 id="totalAmount">Total Udhaar: Rs 0</h2>
+        
+        <input type="text" id="searchBox" placeholder="Naam se khata dhoondo..." onkeyup="searchKhata()">
         
         <input type="text" id="name" placeholder="Customer Ka Naam">
         <input type="number" id="amount" placeholder="Udhaar Ki Raqam">
@@ -78,7 +93,6 @@
     <script>
         let khataList = JSON.parse(localStorage.getItem('khataList')) || [];
         
-        // Page load pe purane khate dikhao
         displayKhatas();
         updateTotal();
 
@@ -93,22 +107,30 @@
                 updateTotal();
                 document.getElementById('name').value = '';
                 document.getElementById('amount').value = '';
+                document.getElementById('searchBox').value = '';
             } else {
-                alert('Naam aur Raqam dono likho');
+                alert('Naam aur Raqam dono likho bhai');
             }
         }
 
-        function displayKhatas() {
+        function displayKhatas(listToShow = khataList) {
             const list = document.getElementById('khataList');
             list.innerHTML = '';
-            khataList.forEach((khata, index) => {
+            
+            if(listToShow.length === 0) {
+                list.innerHTML = '<p style="text-align:center;color:#666;">Koi khata nahi mila</p>';
+                return;
+            }
+            
+            listToShow.forEach((khata) => {
+                const originalIndex = khataList.indexOf(khata);
                 list.innerHTML += `
                     <div class="khata-item">
                         <strong>${khata.name}</strong> - Rs ${khata.amount.toLocaleString()}
                         <br><small>Date: ${khata.date}</small>
                         <div class="btn-group">
                             <button class="btn-whatsapp" onclick="sendWhatsApp('${khata.name}', ${khata.amount})">WhatsApp</button>
-                            <button class="btn-call" onclick="deleteKhata(${index})">Delete</button>
+                            <button class="btn-delete" onclick="deleteKhata(${originalIndex})">Delete</button>
                         </div>
                     </div>
                 `;
@@ -124,15 +146,26 @@
                 `Total Udhaar: Rs ${total.toLocaleString()}`;
         }
 
+        function searchKhata() {
+            const search = document.getElementById('searchBox').value.toLowerCase();
+            const filtered = khataList.filter(khata => 
+                khata.name.toLowerCase().includes(search)
+            );
+            displayKhatas(filtered);
+        }
+
         function deleteKhata(index) {
-            khataList.splice(index, 1);
-            localStorage.setItem('khataList', JSON.stringify(khataList));
-            displayKhatas();
-            updateTotal();
+            if(confirm('Pakka delete karna hai?')) {
+                khataList.splice(index, 1);
+                localStorage.setItem('khataList', JSON.stringify(khataList));
+                displayKhatas();
+                updateTotal();
+                document.getElementById('searchBox').value = '';
+            }
         }
 
         function sendWhatsApp(name, amount) {
-            const msg = `Salam ${name} bhai, apke zimme Rs ${amount} udhaar hai. Meherbani kar ke wapis kar dein. - Tally Mafia Pro`;
+            const msg = `Salam ${name} bhai, apke zimme Rs ${amount.toLocaleString()} udhaar hai. Meherbani kar ke wapis kar dein. - Tally Mafia Pro`;
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         }
     </script>
