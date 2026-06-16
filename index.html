@@ -4,35 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tally Mafia Pro - Sikander Hayat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f0f2f5;
             margin: 0;
-            padding: 15px;
+            padding: 10px;
         }
         .container {
-            max-width: 1000px;
+            max-width: 100%;
             margin: auto;
             background: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         #loginBox {
             text-align: center;
-            margin-top: 50px;
-            padding: 30px;
+            margin-top: 30px;
+            padding: 25px;
             background: white;
             border-radius: 10px;
             max-width: 400px;
-            margin: 50px auto;
+            margin: 30px auto;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        input, button, select {
+        input, button {
             padding: 12px;
-            margin: 8px 0;
+            margin: 6px 0;
             width: 100%;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -45,84 +46,92 @@
             cursor: pointer;
             font-weight: bold;
         }
-        button:hover { background: #218838; }
         .danger { background: #dc3545; }
-        .danger:hover { background: #c82333; }
         .info { background: #17a2b8; }
-        .info:hover { background: #138496; }
         .warning { background: #ffc107; color: black; }
-        .warning:hover { background: #e0a800; }
+        .success { background: #25D366; }
+        .pdf { background: #ff6b6b; }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 14px;
+            margin-top: 15px;
+            font-size: 12px;
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+            padding: 5px;
+            text-align: center;
         }
-        th { background: #f8f9fa; }
+        th { background: #f8f9fa; font-size: 11px; }
         .header {
             background: #343a40;
             color: white;
-            padding: 15px;
+            padding: 12px;
             border-radius: 5px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             position: relative;
         }
         .trial-info {
             color: #dc3545;
             font-weight: bold;
-            margin: 10px 0;
-            font-size: 14px;
+            margin: 8px 0;
+            font-size: 13px;
         }
         .logout {
             position: absolute;
-            right: 10px;
-            top: 10px;
+            right: 8px;
+            top: 8px;
             background: #6c757d;
-            padding: 5px 10px;
-            font-size: 12px;
+            padding: 4px 8px;
+            font-size: 11px;
             width: auto;
         }
-        .row { display: flex; gap: 10px; }
+        .row { display: flex; gap: 8px; }
         .row > * { flex: 1; }
-        .btn-group { display: flex; gap: 5px; }
-        .btn-group button { padding: 6px 8px; font-size: 12px; margin: 2px 0; }
-        @media(max-width:768px){ 
-            .row{ flex-direction:column; } 
-            table{ font-size: 12px; }
-            th,td{ padding: 6px; }
+        .action-btn {
+            padding: 4px;
+            font-size: 14px;
+            margin: 1px;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+        }
+        .btn-stack {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+        }
+        @media(max-width:600px){ 
+            .row{ flex-direction:column; gap: 0; } 
+            table{ font-size: 10px; }
+            th,td{ padding: 3px; }
+            .container{ padding: 8px; }
+            .action-btn{ width:24px; height:24px; font-size:12px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- LOGIN BOX - 7 DIN TRIAL -->
     <div id="loginBox">
         <h2>Tally Mafia Pro 💰</h2>
         <p class="trial-info" id="trialText">7 Din Free Trial | Baad me Rs 999/month</p>
         <input id="userEmail" type="text" placeholder="Email ya Phone Number">
         <input id="userPass" type="password" placeholder="Password">
         <button onclick="checkLogin()">Login / Start Free Trial</button>
-        <p style="margin-top:20px; font-size:13px;">
-            <b>Payment:</b> JazzCash 0314-5587856<br>
-            Transaction ID WhatsApp kar ke account unlock karwain
+        <p style="margin-top:15px; font-size:12px;">
+            <b>JazzCash:</b> 0314-5587856<br>
+            Transaction ID WhatsApp kar ke unlock karwain
         </p>
-        <p style="font-size:11px; color:#666;">Developed by Sikander Hayat - Risalpur Cantt</p>
     </div>
 
-    <!-- MAIN APP -->
     <div id="mainApp" style="display:none;">
         <div class="container">
             <div class="header">
                 <button class="logout" onclick="logout()">Logout</button>
-                <h1>Tally Mafia Pro 👑</h1>
-                <p id="userDisplay">Welcome Ustaad</p>
-                <p id="daysLeft" style="font-size:12px;"></p>
+                <h2 style="margin:5px 0;">Tally Mafia Pro 👑</h2>
+                <p id="userDisplay" style="margin:5px 0; font-size:14px;">Welcome Ustaad</p>
+                <p id="daysLeft" style="font-size:11px; margin:0;"></p>
             </div>
 
             <h3>Naya Khata Add Karo</h3>
@@ -132,21 +141,21 @@
             </div>
             <div class="row">
                 <input id="amount" type="number" placeholder="Asal Raqam - 19500">
-                <input id="interest" type="number" placeholder="Interest % per Day" value="2">
+                <input id="interest" type="number" placeholder="Sood % per Day" value="2">
             </div>
             <button onclick="addKhata()">Khata Add Karo</button>
 
-            <h3 style="margin-top:30px;">Tamaam Khate - Total Due: <span id="totalDue">Rs 0</span></h3>
+            <h3 style="margin-top:20px; font-size:16px;">Tamaam Khate - Total: <span id="totalDue">Rs 0</span></h3>
             <div style="overflow-x:auto;">
-                <table id="khataTable">
+                <table>
                     <thead>
                         <tr>
                             <th>Naam</th>
                             <th>Phone</th>
                             <th>Asal</th>
                             <th>Sood</th>
-                            <th>Total Due</th>
-                            <th>Days</th>
+                            <th>Total</th>
+                            <th>Din</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -158,9 +167,11 @@
     </div>
 
     <script>
-        // ===== SAAS LOGIN SYSTEM =====
         const trialDays = 7;
         const adminEmail = "sikander@admin.com";
+        const ownerName = "Sikander Hayat";
+        const ownerPhone = "0314-5587856";
+        const ownerAddress = "Risalpur Cantt, Nowshera";
         
         if(!localStorage.getItem('startDate')){
             localStorage.setItem('startDate', new Date().toISOString());
@@ -169,7 +180,7 @@
         function unlockUser(){
             localStorage.setItem('paidUser', 'true');
             localStorage.setItem('userEmail', adminEmail);
-            alert('Account Unlocked Forever! 👑 Shukriya Ustaad');
+            alert('Account Unlocked Forever! 👑');
             location.reload();
         }
 
@@ -178,11 +189,11 @@
             let pass = document.getElementById('userPass').value.trim();
             
             if(email === "" || pass === ""){
-                alert('Email aur Password dono dalo Ustaad');
+                alert('Email aur Password dono dalo');
                 return;
             }
             
-            if(email.toLowerCase() === adminEmail || email.toLowerCase() === "unlock@tally.com"){
+            if(email.toLowerCase() === adminEmail || email.toLowerCase() === "unlock@tally.com" || email.toLowerCase() === "sikanderhayyat500@gmail.com"){
                 localStorage.setItem('paidUser', 'true');
                 localStorage.setItem('userEmail', email);
                 showApp(email);
@@ -194,7 +205,7 @@
             let isPaid = localStorage.getItem('paidUser') === 'true';
             
             if(daysUsed >= trialDays && !isPaid){
-                alert('Trial khatam ho gaya! \n\nRs 999 JazzCash karo: 0314-5587856\nYa Admin Email use karo: sikander@admin.com\n\nSikander Hayat - Risalpur');
+                alert('Trial khatam! Rs 999 JazzCash: 0314-5587856\nYa Email: sikander@admin.com use karo');
                 return;
             }
             
@@ -213,7 +224,7 @@
         function updateDaysLeft(){
             let isPaid = localStorage.getItem('paidUser') === 'true';
             if(isPaid){
-                document.getElementById('daysLeft').innerText = '✅ Paid User - Unlimited Access';
+                document.getElementById('daysLeft').innerText = '✅ Paid User - Unlimited';
                 document.getElementById('trialText').innerText = 'Paid User Active 👑';
                 return;
             }
@@ -229,7 +240,7 @@
             let startDate = new Date(localStorage.getItem('startDate'));
             let daysUsed = Math.floor((new Date() - startDate) / (1000*60*60*24));
             
-            if(email && (daysUsed < trialDays || isPaid || email.toLowerCase() === adminEmail)){
+            if(email && (daysUsed < trialDays || isPaid)){
                 showApp(email);
             }
         }
@@ -239,7 +250,6 @@
             location.reload();
         }
 
-        // ===== KHATA APP KA LOGIC =====
         let khatay = JSON.parse(localStorage.getItem('khatay')) || [];
 
         function addKhata(){
@@ -270,7 +280,6 @@
             document.getElementById('amount').value = '';
             
             loadKhatay();
-            alert('Khata Add Ho Gaya - Ab Sajid bach ke dikhaye 😂');
         }
 
         function loadKhatay(){
@@ -288,15 +297,17 @@
                     <tr>
                         <td><b>${k.name}</b></td>
                         <td><a href="tel:${k.phone}">${k.phone}</a></td>
-                        <td>Rs ${k.amount.toLocaleString()}</td>
-                        <td>Rs ${totalInterest.toFixed(0)}<br><small>${k.interest}% × ${days}d</small></td>
-                        <td><b>Rs ${totalDue.toFixed(0)}</b></td>
+                        <td>${k.amount.toLocaleString()}</td>
+                        <td>${totalInterest.toFixed(0)}<br><small>${k.interest}%×${days}d</small></td>
+                        <td><b>${totalDue.toFixed(0)}</b></td>
                         <td>${days}</td>
                         <td>
-                            <div class="btn-group">
-                                <button class="info" onclick="callKaro('${k.phone}')">📞</button>
-                                <button class="warning" onclick="smsKaro('${k.phone}','${k.name}',${totalDue.toFixed(0)})">📱</button>
-                                <button class="danger" onclick="deleteKhata(${k.id})">🗑️</button>
+                            <div class="btn-stack">
+                                <button class="info action-btn" onclick="callKaro('${k.phone}')" title="Call">📞</button>
+                                <button class="warning action-btn" onclick="smsKaro('${k.phone}','${k.name}',${totalDue.toFixed(0)})" title="SMS">📱</button>
+                                <button class="success action-btn" onclick="whatsappKaro('${k.phone}','${k.name}',${totalDue.toFixed(0)},${days})" title="WhatsApp">💬</button>
+                                <button class="pdf action-btn" onclick="pdfBanao('${k.name}','${k.phone}',${k.amount},${totalInterest.toFixed(0)},${totalDue.toFixed(0)},${days})" title="PDF">📄</button>
+                                <button class="danger action-btn" onclick="deleteKhata(${k.id})" title="Delete" style="grid-column: span 2;">🗑️</button>
                             </div>
                         </td>
                     </tr>
@@ -311,12 +322,54 @@
         }
 
         function smsKaro(phone, name, amount){
-            let msg = `Salam ${name} Bhai, Apke zimay Rs ${amount} baqi hain. Meharbani kar ke jald ada karen. Shukriya - Tally Mafia Pro`;
+            let msg = `Salam ${name} Bhai, Rs ${amount} baqi hain. Jald ada karen. Tally Mafia Pro`;
             window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
         }
 
+        function whatsappKaro(phone, name, amount, days){
+            let msg = `*Tally Mafia Pro - Reminder* %0A%0ASalam ${name} Bhai,%0A%0AApke zimay *Rs ${amount}* baqi hain.%0A${days} din ho gaye hain.%0A%0AMeharbani kar ke jald ada karen.%0A%0A*${ownerName}*%0A${ownerPhone}`;
+            window.open(`https://wa.me/92${phone.substring(1)}?text=${msg}`, '_blank');
+        }
+
+        function pdfBanao(name, phone, asal, sood, total, days){
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text("Tally Mafia Pro - Payment Notice", 105, 20, null, null, "center");
+            
+            doc.setFontSize(12);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 35);
+            
+            doc.setFontSize(14);
+            doc.text("Debtor Details:", 20, 50);
+            doc.setFontSize(12);
+            doc.text(`Name: ${name}`, 20, 60);
+            doc.text(`Phone: ${phone}`, 20, 70);
+            doc.text(`Days Pending: ${days}`, 20, 80);
+            
+            doc.setFontSize(14);
+            doc.text("Amount Details:", 20, 95);
+            doc.setFontSize(12);
+            doc.text(`Asal Raqam: Rs ${asal.toLocaleString()}`, 20, 105);
+            doc.text(`Sood: Rs ${sood.toLocaleString()}`, 20, 115);
+            doc.text(`Total Due: Rs ${total.toLocaleString()}`, 20, 125);
+            
+            doc.setFontSize(10);
+            doc.text("Ye ek computer generated notice hai. Adaigi na karne ki surat me", 20, 145);
+            doc.text("qanooni karwai ki ja sakti hai.", 20, 152);
+            
+            doc.setFontSize(12);
+            doc.text("From:", 20, 170);
+            doc.text(ownerName, 20, 180);
+            doc.text(ownerPhone, 20, 187);
+            doc.text(ownerAddress, 20, 194);
+            
+            doc.save(`TallyMafia_${name}_${total}.pdf`);
+        }
+
         function deleteKhata(id){
-            if(confirm('Khata delete karna hai? Paisa wasool ho gaya kya?')){
+            if(confirm('Delete karna hai? Paisa wasool ho gaya?')){
                 khatay = khatay.filter(k => k.id !== id);
                 localStorage.setItem('khatay', JSON.stringify(khatay));
                 loadKhatay();
